@@ -1,0 +1,179 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no, maximum-scale=1" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="Cue Remote" />
+  <meta name="theme-color" content="#0a0a0c" />
+  <meta name="format-detection" content="telephone=no" />
+  <title>Cue Remote</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <div class="remote" id="remote">
+    <header class="remote-header">
+      <div class="brand-row">
+        <span class="brand">CUE</span>
+        <span class="brand-sub">REMOTE</span>
+        <span class="led" id="led" title="connection"></span>
+        <button id="fs-remote-btn" class="fs-remote-btn" title="Toggle fullscreen">⛶ FULL</button>
+      </div>
+      <div class="lcd">
+        <div class="lcd-row">
+          <div class="lcd-item">
+            <span class="lcd-label">SPD</span>
+            <span class="lcd-value" id="lcd-speed">--</span>
+          </div>
+          <div class="lcd-divider"></div>
+          <div class="lcd-item">
+            <span class="lcd-label">FNT</span>
+            <span class="lcd-value" id="lcd-font">--</span>
+          </div>
+          <div class="lcd-divider"></div>
+          <div class="lcd-item">
+            <span class="lcd-label">OPC</span>
+            <span class="lcd-value" id="lcd-opacity">--</span>
+          </div>
+        </div>
+        <div class="lcd-status" id="lcd-status">CONNECTING…</div>
+      </div>
+    </header>
+
+    <section class="primary">
+      <button class="play-disc paused" id="play" aria-label="Play / Pause">
+        <span class="play-icon" id="play-icon">▶</span>
+      </button>
+      <div class="quick-row">
+        <button class="quick-btn" id="reset">
+          <span class="quick-icon">↺</span>
+          <span class="quick-label">RESET</span>
+        </button>
+        <button class="quick-btn" id="theme-toggle">
+          <span class="quick-icon" id="theme-icon">☾</span>
+          <span class="quick-label" id="theme-label">DARK</span>
+        </button>
+      </div>
+    </section>
+
+    <section>
+      <div class="dpad-label">
+        <span>CUES</span>
+        <span class="readout" id="cue-count-readout">0</span>
+      </div>
+      <div class="cue-grid">
+        <button class="cue-btn" id="jump-prev">
+          <span class="ic">◀</span>
+          <span>PREV</span>
+        </button>
+        <button class="cue-btn" id="jump-next">
+          <span class="ic">▶</span>
+          <span>NEXT</span>
+        </button>
+        <button class="cue-btn warn" id="stumble">
+          <span class="ic">⚑</span>
+          <span>STUMBLE</span>
+        </button>
+        <button class="cue-btn" id="countdown">
+          <span class="ic">⏱</span>
+          <span>COUNT</span>
+        </button>
+      </div>
+      <div class="chapter-list" id="chapter-list">
+        <div class="chapter-empty">No chapters yet</div>
+      </div>
+    </section>
+
+    <section>
+      <div class="dpad-label">
+        <span>REACTIONS</span>
+        <span class="readout" id="reaction-readout">—</span>
+      </div>
+      <div class="react-grid">
+        <button class="react-btn" data-reaction="smile">🙂<span class="nm">SMILE</span></button>
+        <button class="react-btn" data-reaction="laugh">😄<span class="nm">LAUGH</span></button>
+        <button class="react-btn" data-reaction="nod">👍<span class="nm">NOD</span></button>
+        <button class="react-btn" data-reaction="wave">👋<span class="nm">WAVE</span></button>
+        <button class="react-btn" data-reaction="point">👉<span class="nm">POINT</span></button>
+        <button class="react-btn" data-reaction="wink">😉<span class="nm">WINK</span></button>
+        <button class="react-btn" data-reaction="shrug">🤷<span class="nm">SHRUG</span></button>
+        <button class="react-btn" data-reaction="clap">👏<span class="nm">CLAP</span></button>
+        <button class="react-btn" data-reaction="cry">😢<span class="nm">CRY</span></button>
+        <button class="react-btn" data-reaction="thumbsup">👍<span class="nm">YES</span></button>
+      </div>
+    </section>
+
+    <section>
+      <div class="dpad-label">
+        <span>MIRROR</span>
+        <span class="readout" id="mirror-readout">NONE</span>
+      </div>
+      <div class="mirror-row" id="mirror-row">
+        <button class="mirror-btn active" data-mirror="none">NONE</button>
+        <button class="mirror-btn" data-mirror="h">⇄ H</button>
+        <button class="mirror-btn" data-mirror="v">⇅ V</button>
+        <button class="mirror-btn" data-mirror="both">⇄⇅</button>
+      </div>
+    </section>
+
+    <section class="dpad">
+      <div class="dpad-label">
+        <span>SPEED</span>
+        <span class="readout" id="speed-readout">3</span>
+      </div>
+      <div class="dpad-row">
+        <button class="dpad-btn" id="speed-down" aria-label="Slower">−</button>
+        <div class="dpad-bar"><div class="dpad-fill" id="speed-fill"></div></div>
+        <button class="dpad-btn" id="speed-up" aria-label="Faster">+</button>
+      </div>
+    </section>
+
+    <section class="dpad">
+      <div class="dpad-label">
+        <span>FONT</span>
+        <span class="readout" id="font-readout">32 px</span>
+      </div>
+      <div class="dpad-row">
+        <button class="dpad-btn" id="font-down" aria-label="Smaller">−</button>
+        <div class="dpad-bar"><div class="dpad-fill" id="font-fill"></div></div>
+        <button class="dpad-btn" id="font-up" aria-label="Larger">+</button>
+      </div>
+    </section>
+
+    <section class="slider-section">
+      <div class="dpad-label">
+        <span>OPACITY</span>
+        <span class="readout" id="opacity-readout">80%</span>
+      </div>
+      <input type="range" id="opacity" min="10" max="100" value="80" />
+    </section>
+
+    <section class="image-section">
+      <div class="dpad-label"><span>REFERENCE IMAGE</span><span class="readout" id="image-readout">—</span></div>
+      <div class="image-row">
+        <button class="quick-btn" id="upload-image">
+          <span class="quick-icon">▤</span>
+          <span class="quick-label">UPLOAD</span>
+        </button>
+        <button class="quick-btn ghost" id="clear-image">
+          <span class="quick-label">CLEAR</span>
+        </button>
+        <input type="file" id="image-file" accept="image/*" hidden />
+      </div>
+      <div class="image-preview" id="image-preview">
+        <img id="image-thumb" alt="" />
+        <span class="empty-text">No image attached</span>
+      </div>
+    </section>
+
+    <footer>
+      <span>CUE · REMOTE</span>
+    </footer>
+  </div>
+
+  <div class="toast" id="toast"></div>
+
+  <script src="app.js"></script>
+</body>
+</html>

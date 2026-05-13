@@ -1,0 +1,1116 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <title>Cue — Teleprompter</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #0d0d0f;
+      --surface: #18181c;
+      --surface-hi: #1f1f24;
+      --border: #2a2a30;
+      --accent: #e8ff47;
+      --accent-dim: rgba(232, 255, 71, 0.18);
+      --text: #f0f0f0;
+      --muted: #666;
+      --danger: #ff6868;
+      --pause-color: #ffd44a;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    html, body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'JetBrains Mono', ui-monospace, Menlo, monospace;
+      font-size: 12px;
+      line-height: 1.45;
+      -webkit-font-smoothing: antialiased;
+      min-height: 100vh;
+    }
+
+    body { padding: 18px 20px 32px; }
+
+    /* ---------- APP SHELL / RESPONSIVE GRID ---------- */
+    .app-shell {
+      max-width: 1800px;
+      margin: 0 auto;
+    }
+
+    .app-grid {
+      display: grid;
+      gap: 14px;
+      align-items: start;
+      grid-template-columns: 1fr;
+    }
+
+    .col-left, .col-center, .col-right {
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+      min-width: 0;
+    }
+    .col-left > section,
+    .col-center > section,
+    .col-right > section {
+      margin-bottom: 0;
+    }
+
+    /* 2-col: 760-1099 — script editor dominates, side rails stack */
+    @media (min-width: 760px) {
+      .app-grid {
+        grid-template-columns: minmax(0, 1.4fr) minmax(280px, 1fr);
+        grid-template-areas:
+          "center left"
+          "center right";
+      }
+      .col-left   { grid-area: left; }
+      .col-center { grid-area: center; }
+      .col-right  { grid-area: right; }
+    }
+
+    /* 3-col: 1100+ — full dashboard */
+    @media (min-width: 1100px) {
+      .app-grid {
+        grid-template-columns: minmax(240px, 0.85fr) minmax(420px, 1.7fr) minmax(280px, 1fr);
+        grid-template-areas: "left center right";
+      }
+      /* on wide screens, give the editor more vertical breathing room */
+      textarea#script { min-height: 360px; }
+    }
+
+    @media (min-width: 1500px) {
+      textarea#script { min-height: 460px; }
+    }
+
+    /* ---------- FULLSCREEN TOGGLE ---------- */
+    .brand .fs-btn {
+      margin-left: 10px;
+      background: transparent;
+      color: var(--muted);
+      border: 1px solid var(--border);
+      border-radius: 3px;
+      padding: 5px 9px;
+      font-size: 10px;
+      letter-spacing: 0.14em;
+      font-family: inherit;
+      cursor: pointer;
+      transition: all 120ms ease;
+      text-transform: uppercase;
+    }
+    .brand .fs-btn:hover { border-color: var(--accent); color: var(--accent); }
+    .brand .fs-btn.active { border-color: var(--accent); color: var(--accent); }
+
+    h1 {
+      font-size: 11px;
+      letter-spacing: 0.22em;
+      color: var(--muted);
+      font-weight: 500;
+      margin-bottom: 4px;
+    }
+
+    .brand {
+      display: flex;
+      align-items: baseline;
+      gap: 10px;
+      margin-bottom: 18px;
+      padding-bottom: 12px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .brand .name {
+      font-size: 18px;
+      font-weight: 700;
+      letter-spacing: 0.04em;
+      color: var(--accent);
+    }
+
+    .brand .tagline {
+      font-size: 10px;
+      color: var(--muted);
+      letter-spacing: 0.16em;
+    }
+
+    .brand .db {
+      margin-left: auto;
+      font-size: 9.5px;
+      letter-spacing: 0.16em;
+      color: var(--muted);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .brand .db .dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: var(--muted);
+    }
+    .brand .db.connected .dot { background: var(--accent); box-shadow: 0 0 6px var(--accent); }
+    .brand .db.connected { color: var(--accent); }
+    .brand .db.error .dot { background: var(--danger); }
+    .brand .db.error { color: var(--danger); }
+
+    section {
+      margin-bottom: 18px;
+      padding: 14px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+    }
+
+    .section-label {
+      font-size: 10px;
+      letter-spacing: 0.22em;
+      color: var(--muted);
+      font-weight: 500;
+      margin-bottom: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    textarea {
+      width: 100%;
+      min-height: 200px;
+      resize: vertical;
+      background: var(--bg);
+      color: var(--text);
+      border: 1px solid var(--border);
+      border-radius: 3px;
+      padding: 12px 14px;
+      font-family: 'Georgia', serif;
+      font-size: 14px;
+      line-height: 1.55;
+      outline: none;
+      transition: border-color 120ms ease;
+    }
+
+    textarea:focus { border-color: var(--accent); }
+    textarea::placeholder { color: var(--muted); font-style: italic; }
+
+    .row { display: flex; gap: 8px; align-items: center; }
+    .row + .row { margin-top: 8px; }
+
+    .char-count {
+      color: var(--muted);
+      font-size: 10px;
+      letter-spacing: 0.1em;
+    }
+
+    button {
+      font-family: inherit;
+      font-size: 11px;
+      letter-spacing: 0.14em;
+      font-weight: 500;
+      padding: 9px 12px;
+      background: var(--bg);
+      color: var(--text);
+      border: 1px solid var(--border);
+      border-radius: 3px;
+      cursor: pointer;
+      transition: all 120ms ease;
+      text-transform: uppercase;
+    }
+
+    button:hover { border-color: var(--accent); color: var(--accent); }
+    button:active { background: var(--accent-dim); }
+
+    button.primary {
+      background: var(--accent);
+      color: var(--bg);
+      border-color: var(--accent);
+      font-weight: 700;
+    }
+    button.primary:hover { background: var(--bg); color: var(--accent); }
+
+    button.danger:hover { border-color: var(--danger); color: var(--danger); }
+    button.full { flex: 1; }
+
+    .grid-3 {
+      display: grid;
+      grid-template-columns: 2fr 1fr 1fr 1fr;
+      gap: 6px;
+    }
+    .grid-3 button { padding: 14px 8px; font-size: 11px; }
+
+    .grid-controls {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr 1fr;
+      gap: 6px;
+      margin-top: 8px;
+    }
+    .grid-controls button { padding: 10px 6px; font-size: 10px; }
+
+    .slider-row {
+      display: grid;
+      grid-template-columns: 80px 1fr 50px;
+      align-items: center;
+      gap: 10px;
+      padding: 6px 0;
+    }
+    .slider-row + .slider-row { border-top: 1px solid var(--border); }
+    .slider-row label { font-size: 10px; letter-spacing: 0.16em; color: var(--muted); }
+    .slider-row .value {
+      font-size: 11px;
+      text-align: right;
+      color: var(--accent);
+      font-variant-numeric: tabular-nums;
+    }
+
+    input[type="range"] {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 100%;
+      height: 4px;
+      background: var(--border);
+      border-radius: 2px;
+      outline: none;
+    }
+    input[type="range"]::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 14px;
+      height: 14px;
+      background: var(--accent);
+      border-radius: 50%;
+      cursor: pointer;
+      border: 2px solid var(--bg);
+      box-shadow: 0 0 0 1px var(--accent);
+    }
+
+    .pos-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+    }
+    .pos-grid label {
+      font-size: 10px;
+      letter-spacing: 0.16em;
+      color: var(--muted);
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    input[type="number"], input[type="text"], select {
+      background: var(--bg);
+      color: var(--text);
+      border: 1px solid var(--border);
+      border-radius: 3px;
+      padding: 8px 10px;
+      font-family: inherit;
+      font-size: 12px;
+      outline: none;
+      width: 100%;
+    }
+    input[type="number"]:focus, input[type="text"]:focus, select:focus {
+      border-color: var(--accent);
+    }
+
+    .status { font-size: 11px; line-height: 1.7; }
+    .status .line { display: flex; gap: 6px; padding: 3px 0; }
+    .status .key { color: var(--muted); min-width: 130px; letter-spacing: 0.06em; }
+    .status .val { color: var(--text); }
+    .status .val .ok { color: var(--accent); }
+    .status .val .warn { color: #ffb54a; }
+    .status .val .err { color: var(--danger); }
+    .status .heading {
+      color: var(--muted);
+      font-size: 10px;
+      letter-spacing: 0.22em;
+      margin-top: 10px;
+      padding-top: 8px;
+      border-top: 1px solid var(--border);
+    }
+    .status .row-item {
+      display: grid;
+      grid-template-columns: 200px 1fr;
+      gap: 6px;
+      padding: 2px 0;
+      font-size: 10.5px;
+    }
+    .status .rec {
+      margin-top: 10px;
+      padding-top: 8px;
+      border-top: 1px solid var(--border);
+      color: var(--text);
+      font-size: 10.5px;
+      font-style: italic;
+    }
+
+    .shortcuts {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 4px 14px;
+      font-size: 11px;
+    }
+    .shortcuts .sc-key { color: var(--accent); font-variant-numeric: tabular-nums; }
+    .shortcuts .sc-desc { color: var(--muted); }
+
+    .file-button-row {
+      display: flex;
+      gap: 6px;
+      margin-top: 8px;
+    }
+
+    .image-preview {
+      width: 100%;
+      height: 120px;
+      background: var(--bg);
+      border: 1px dashed var(--border);
+      border-radius: 3px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+      padding: 10px;
+    }
+    .image-preview.empty { border-style: dashed; }
+    .image-preview:not(.empty) { border-style: solid; border-color: var(--accent); }
+    .image-preview .image-empty-text {
+      color: var(--muted);
+      font-size: 10.5px;
+      text-align: center;
+      letter-spacing: 0.04em;
+      line-height: 1.5;
+      max-width: 80%;
+    }
+    .image-preview #image-thumb {
+      max-width: 100%;
+      max-height: 100%;
+      object-fit: contain;
+      display: none;
+    }
+    .image-preview:not(.empty) .image-empty-text { display: none; }
+    .image-preview:not(.empty) #image-thumb { display: block; }
+
+    .theme-row {
+      display: grid;
+      grid-template-columns: 80px 1fr;
+      align-items: center;
+      gap: 10px;
+      padding: 8px 0 4px;
+      border-top: 1px solid var(--border);
+    }
+    .theme-row label { font-size: 10px; letter-spacing: 0.16em; color: var(--muted); }
+    .check-row {
+      display: grid;
+      grid-template-columns: 80px 1fr;
+      align-items: center;
+      gap: 10px;
+      padding: 8px 0 4px;
+      border-top: 1px solid var(--border);
+    }
+    .check-row label { font-size: 10px; letter-spacing: 0.16em; color: var(--muted); }
+    .check-row input {
+      width: 16px;
+      height: 16px;
+      accent-color: var(--accent);
+      cursor: pointer;
+    }
+
+    .pills {
+      display: flex;
+      gap: 4px;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      padding: 3px;
+    }
+    .pill {
+      flex: 1;
+      padding: 7px 10px;
+      font-size: 10px;
+      letter-spacing: 0.14em;
+      font-family: inherit;
+      font-weight: 600;
+      background: transparent;
+      color: var(--muted);
+      border: none;
+      border-radius: 2px;
+      cursor: pointer;
+      text-transform: uppercase;
+      transition: all 120ms ease;
+    }
+    .pill:hover { color: var(--text); }
+    .pill.active { background: var(--accent); color: var(--bg); }
+
+    .remote-pair {
+      display: grid;
+      grid-template-columns: 120px 1fr;
+      gap: 14px;
+      align-items: stretch;
+    }
+
+    .qr-frame {
+      width: 120px;
+      height: 120px;
+      background: #ffffff;
+      border-radius: 4px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+      padding: 6px;
+      flex-shrink: 0;
+    }
+    .qr-frame.empty { background: var(--bg); border: 1px dashed var(--border); }
+    .qr-frame img { width: 100%; height: 100%; object-fit: contain; display: block; }
+    .qr-frame.empty img { display: none; }
+    .qr-frame .qr-placeholder {
+      color: var(--muted);
+      font-size: 9.5px;
+      letter-spacing: 0.18em;
+      text-align: center;
+      display: none;
+    }
+    .qr-frame.empty .qr-placeholder { display: block; }
+
+    .remote-meta {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      min-width: 0;
+    }
+
+    .remote-help {
+      font-size: 10.5px;
+      color: var(--muted);
+      line-height: 1.55;
+      letter-spacing: 0.02em;
+    }
+
+    .remote-url-row {
+      display: flex;
+      gap: 6px;
+      align-items: stretch;
+    }
+
+    .remote-url {
+      flex: 1;
+      min-width: 0;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 3px;
+      padding: 7px 9px;
+      font-family: inherit;
+      font-size: 10px;
+      color: var(--accent);
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      letter-spacing: 0;
+      user-select: text;
+      -webkit-user-select: text;
+    }
+
+    .remote-copy { padding: 6px 10px; font-size: 10px; }
+
+    .remote-status-line {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 10.5px;
+      color: var(--muted);
+      letter-spacing: 0.08em;
+    }
+    .remote-status-line .dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: var(--muted);
+    }
+    .remote-status-line.connected .dot { background: var(--accent); box-shadow: 0 0 6px var(--accent); }
+    .remote-status-line.connected { color: var(--accent); }
+    .remote-status-line.error .dot { background: var(--danger); }
+    .remote-status-line.error { color: var(--danger); }
+
+    .echo-pulse { animation: pulse 350ms ease-out; }
+    @keyframes pulse {
+      0% { box-shadow: 0 0 0 0 var(--accent); }
+      100% { box-shadow: 0 0 0 6px transparent; }
+    }
+
+    /* ---------- LIBRARY ---------- */
+    .lib-list {
+      max-height: 160px;
+      overflow-y: auto;
+      border: 1px solid var(--border);
+      border-radius: 3px;
+      background: var(--bg);
+    }
+    .lib-item {
+      display: grid;
+      grid-template-columns: 1fr auto auto;
+      gap: 8px;
+      padding: 7px 10px;
+      align-items: center;
+      cursor: pointer;
+      border-bottom: 1px solid var(--border);
+      font-size: 11px;
+    }
+    .lib-item:last-child { border-bottom: none; }
+    .lib-item:hover { background: var(--surface-hi); }
+    .lib-item.active { background: var(--accent-dim); color: var(--accent); }
+    .lib-item .title {
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .lib-item .meta {
+      color: var(--muted);
+      font-size: 9.5px;
+      letter-spacing: 0.06em;
+    }
+    .lib-item .del {
+      background: transparent;
+      border: none;
+      color: var(--muted);
+      padding: 2px 6px;
+      font-size: 11px;
+    }
+    .lib-item .del:hover { color: var(--danger); }
+    .lib-empty {
+      padding: 14px;
+      color: var(--muted);
+      text-align: center;
+      font-size: 11px;
+      letter-spacing: 0.06em;
+    }
+    .lib-toolbar {
+      display: flex;
+      gap: 6px;
+      margin-top: 8px;
+    }
+
+    .title-row {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 8px;
+    }
+    .title-row input[type="text"] {
+      flex: 1;
+      font-family: 'Georgia', serif;
+      font-size: 14px;
+      padding: 9px 12px;
+    }
+    .save-state {
+      font-size: 9.5px;
+      letter-spacing: 0.14em;
+      color: var(--muted);
+      align-self: center;
+      min-width: 80px;
+      text-align: right;
+    }
+    .save-state.saved { color: var(--accent); }
+    .save-state.dirty { color: var(--pause-color); }
+    .save-state.err { color: var(--danger); }
+
+    /* ---------- CUE TOOLBAR ---------- */
+    .cue-toolbar {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 4px;
+      margin-bottom: 8px;
+    }
+    .cue-toolbar button {
+      padding: 6px 9px;
+      font-size: 10px;
+      letter-spacing: 0.1em;
+    }
+    .cue-toolbar select {
+      width: auto;
+      padding: 6px 10px;
+      font-size: 10px;
+      letter-spacing: 0.1em;
+    }
+    .cue-toolbar .group {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+    .cue-toolbar button.ai {
+      margin-left: auto;
+      border-color: var(--accent);
+      color: var(--accent);
+    }
+    .cue-toolbar button.ai:hover:not(:disabled) {
+      background: var(--accent);
+      color: var(--bg);
+    }
+    .cue-toolbar button.ai:disabled {
+      opacity: 0.4;
+      cursor: not-allowed;
+    }
+    .cue-toolbar button.ai.busy {
+      border-color: var(--pause-color, var(--accent));
+      color: var(--pause-color, var(--accent));
+    }
+    .cue-toolbar button.ai.err {
+      border-color: var(--danger);
+      color: var(--danger);
+    }
+
+    /* ---------- CUE LIST ---------- */
+    .cue-list {
+      max-height: 220px;
+      overflow-y: auto;
+      border: 1px solid var(--border);
+      border-radius: 3px;
+      background: var(--bg);
+    }
+    .cue-row {
+      display: grid;
+      grid-template-columns: 28px 1fr auto;
+      gap: 8px;
+      padding: 6px 10px;
+      align-items: center;
+      border-bottom: 1px solid var(--border);
+      font-size: 11px;
+    }
+    .cue-row:last-child { border-bottom: none; }
+    .cue-row .badge {
+      font-size: 9.5px;
+      letter-spacing: 0.12em;
+      padding: 2px 5px;
+      border-radius: 2px;
+      text-align: center;
+      font-weight: 600;
+    }
+    .cue-row .badge.pause { background: rgba(255,212,74,0.18); color: var(--pause-color); }
+    .cue-row .badge.stop { background: rgba(255,104,104,0.18); color: var(--danger); }
+    .cue-row .badge.react { background: var(--accent-dim); color: var(--accent); }
+    .cue-row .badge.chapter { background: rgba(135,180,255,0.18); color: #87b4ff; }
+    .cue-row .badge.note { background: rgba(160,160,160,0.18); color: #aaa; }
+    .cue-row .badge.breath { background: rgba(140,255,200,0.18); color: #8cffc8; }
+    .cue-row .badge.unknown { background: rgba(255,104,104,0.18); color: var(--danger); }
+    .cue-row .label {
+      color: var(--text);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .cue-row.error .label { color: var(--danger); }
+    .cue-row .jump {
+      padding: 3px 8px;
+      font-size: 9.5px;
+      letter-spacing: 0.1em;
+    }
+    .cue-row.warn { background: rgba(255, 212, 74, 0.06); }
+    .cue-row.warn .label { color: var(--pause-color); }
+    .cue-row.warn .badge.stop {
+      background: rgba(255, 212, 74, 0.28);
+      color: var(--pause-color);
+    }
+    .cue-row.warn .warn-icon {
+      color: var(--pause-color);
+      margin-left: 4px;
+      font-size: 13px;
+    }
+    .cue-warning-banner {
+      background: rgba(255, 212, 74, 0.08);
+      border: 1px solid rgba(255, 212, 74, 0.4);
+      color: var(--pause-color);
+      padding: 7px 10px;
+      margin-bottom: 8px;
+      border-radius: 3px;
+      font-size: 10.5px;
+      line-height: 1.45;
+      display: flex;
+      gap: 8px;
+      align-items: flex-start;
+    }
+    .cue-warning-banner .ic { font-size: 14px; line-height: 1; }
+    .cue-empty {
+      padding: 14px;
+      color: var(--muted);
+      text-align: center;
+      font-size: 11px;
+      letter-spacing: 0.06em;
+    }
+
+    .cue-stats {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 6px;
+      margin-top: 8px;
+    }
+    .cue-stat {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 3px;
+      padding: 6px 4px;
+      text-align: center;
+    }
+    .cue-stat .n {
+      font-size: 16px;
+      font-weight: 700;
+      color: var(--accent);
+      font-variant-numeric: tabular-nums;
+    }
+    .cue-stat .l {
+      font-size: 9px;
+      color: var(--muted);
+      letter-spacing: 0.14em;
+      margin-top: 2px;
+    }
+
+    /* ---------- CHAPTER NAV ---------- */
+    .chapter-nav {
+      display: grid;
+      grid-template-columns: 1fr auto auto auto;
+      gap: 6px;
+      align-items: center;
+      margin-top: 8px;
+    }
+
+    .countdown-row {
+      display: grid;
+      grid-template-columns: 80px 1fr 50px;
+      align-items: center;
+      gap: 10px;
+      padding: 6px 0;
+      border-top: 1px solid var(--border);
+    }
+    .countdown-row label { font-size: 10px; letter-spacing: 0.16em; color: var(--muted); }
+
+    /* ---------- VOICE ---------- */
+    .voice-section .desc {
+      font-size: 10.5px;
+      color: var(--muted);
+      line-height: 1.5;
+      margin-bottom: 8px;
+    }
+    .voice-row {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 8px;
+      align-items: center;
+    }
+    .voice-transcript {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 3px;
+      padding: 8px 10px;
+      font-size: 11px;
+      min-height: 50px;
+      max-height: 100px;
+      overflow-y: auto;
+      color: var(--muted);
+      margin-top: 8px;
+      font-family: 'Georgia', serif;
+    }
+    .voice-transcript.active { color: var(--text); }
+    .voice-transcript .partial { color: var(--accent); opacity: 0.7; }
+
+    /* ---------- SESSIONS ---------- */
+    .session-list {
+      max-height: 160px;
+      overflow-y: auto;
+      border: 1px solid var(--border);
+      border-radius: 3px;
+      background: var(--bg);
+    }
+    .session-row {
+      display: grid;
+      grid-template-columns: 1fr auto auto;
+      gap: 8px;
+      padding: 7px 10px;
+      border-bottom: 1px solid var(--border);
+      font-size: 10.5px;
+    }
+    .session-row:last-child { border-bottom: none; }
+    .session-row .when {
+      color: var(--text);
+      letter-spacing: 0.04em;
+    }
+    .session-row .dur {
+      color: var(--muted);
+      font-variant-numeric: tabular-nums;
+    }
+    .session-row .ev {
+      color: var(--accent);
+      font-variant-numeric: tabular-nums;
+    }
+
+    .small-note {
+      font-size: 10px;
+      color: var(--muted);
+      line-height: 1.5;
+      letter-spacing: 0.02em;
+      margin-top: 6px;
+    }
+  </style>
+</head>
+<body>
+  <div class="app-shell">
+  <div class="brand">
+    <span class="name">CUE</span>
+    <span class="tagline">CAPTURE-AWARE TELEPROMPTER</span>
+    <span id="db-status" class="db"><span class="dot"></span><span id="db-text">mongo…</span></span>
+    <button id="overlay-toggle" class="fs-btn" title="Show/hide overlay (⌘/Ctrl+Shift+O)">👁 OVERLAY OFF</button>
+    <button id="fs-btn" class="fs-btn" title="Toggle fullscreen (F11)">⛶ FULL</button>
+  </div>
+
+  <div class="app-grid">
+  <div class="col-left">
+  <section>
+    <div class="section-label">
+      <span>LIBRARY</span>
+      <span id="lib-count" class="char-count">0 scripts</span>
+    </div>
+    <div id="lib-list" class="lib-list">
+      <div class="lib-empty">No scripts yet. Click NEW to create one.</div>
+    </div>
+    <div class="lib-toolbar">
+      <button id="lib-new" class="primary">＋ NEW</button>
+      <button id="lib-load-file">▤ IMPORT FILE</button>
+      <input type="file" id="file-input" accept=".txt,.md" style="display:none" />
+    </div>
+    <div class="small-note" id="lib-note">Connecting to mongodb://127.0.0.1:27017/cue …</div>
+  </section>
+
+  <section>
+    <div class="section-label">
+      <span>SESSIONS</span>
+      <span id="session-count" class="char-count">—</span>
+    </div>
+    <div id="session-list" class="session-list">
+      <div class="cue-empty">No sessions yet.</div>
+    </div>
+    <div class="small-note">Each play opens a session. Stumble bookmarks, cue hits, and resets are recorded — review under HIST after a few runs.</div>
+  </section>
+
+  <section>
+    <div class="section-label">
+      <span>REMOTE</span>
+      <span id="remote-status" class="char-count">starting…</span>
+    </div>
+    <div class="remote-pair">
+      <div id="qr-frame" class="qr-frame empty">
+        <span class="qr-placeholder">QR</span>
+        <img id="qr-image" alt="" />
+      </div>
+      <div class="remote-meta">
+        <div class="remote-help">Scan with your phone's camera (same WiFi). The remote now includes cue jumps, reactions, and stumble bookmarks.</div>
+        <div class="remote-url-row">
+          <div id="remote-url" class="remote-url">—</div>
+          <button id="remote-copy" class="remote-copy">COPY</button>
+        </div>
+        <div id="remote-status-line" class="remote-status-line"><span class="dot"></span><span id="remote-status-text">starting server…</span></div>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div class="section-label">PLATFORM CAPTURE STATUS</div>
+    <div class="status" id="status">
+      <div class="line"><span class="key">Platform:</span><span class="val" id="platform-val">…</span></div>
+      <div class="line"><span class="key">Architecture:</span><span class="val" id="arch-val">…</span></div>
+      <div class="line"><span class="key">Capture Protection:</span><span class="val"><code>win.setContentProtection(true)</code> <span class="ok">✓ active</span></span></div>
+
+      <div class="heading">EXPECTED BEHAVIOR</div>
+      <div class="row-item"><span class="key">Windows 10 2004+</span><span class="val"><span class="ok">✓</span> Invisible to OBS, Zoom, Teams, Meet</span></div>
+      <div class="row-item"><span class="key">macOS (legacy path)</span><span class="val"><span class="ok">✓</span> Hidden from most recorders</span></div>
+      <div class="row-item"><span class="key">macOS (SCK apps)</span><span class="val"><span class="warn">⚠</span> May be visible in apps using ScreenCaptureKit (Zoom v5.16+, OBS v30+, macOS Screenshot)</span></div>
+      <div class="row-item"><span class="key">Hardware capture</span><span class="val"><span class="err">✗</span> Always visible (physics)</span></div>
+      <div class="row-item"><span class="key">Phone camera</span><span class="val"><span class="err">✗</span> Always visible (physics)</span></div>
+
+      <div class="rec">Recommendation: Test with your specific recording setup before relying on invisibility.</div>
+    </div>
+    <div class="file-button-row">
+      <button id="capture-test" class="full">RECORDER PREVIEW MODE — HELP</button>
+    </div>
+  </section>
+
+  <section>
+    <div class="section-label">KEYBOARD SHORTCUTS</div>
+    <div class="shortcuts">
+      <span class="sc-key">⌘/Ctrl+Shift+Space</span><span class="sc-desc">Play / Pause</span>
+      <span class="sc-key">⌘/Ctrl+Shift+R</span><span class="sc-desc">Reset to top</span>
+      <span class="sc-key">⌘/Ctrl+Shift+↑</span><span class="sc-desc">Speed +1</span>
+      <span class="sc-key">⌘/Ctrl+Shift+↓</span><span class="sc-desc">Speed -1</span>
+      <span class="sc-key">⌘/Ctrl+Shift+→</span><span class="sc-desc">Jump next cue</span>
+      <span class="sc-key">⌘/Ctrl+Shift+←</span><span class="sc-desc">Jump prev cue</span>
+      <span class="sc-key">⌘/Ctrl+Shift+B</span><span class="sc-desc">Bookmark stumble</span>
+      <span class="sc-key">⌘/Ctrl+Shift+O</span><span class="sc-desc">Show / hide overlay</span>
+      <span class="sc-key">F11</span><span class="sc-desc">Toggle fullscreen</span>
+    </div>
+  </section>
+  </div><!-- /col-left -->
+
+  <div class="col-center">
+  <section>
+    <div class="section-label">
+      <span>SCRIPT</span>
+      <span id="char-count" class="char-count">0 chars</span>
+    </div>
+    <div class="title-row">
+      <input id="title" type="text" placeholder="Untitled" />
+      <span id="save-state" class="save-state">—</span>
+    </div>
+
+    <div class="cue-toolbar">
+      <button id="cue-insert-pause" title="Insert [[pause]]">＋ PAUSE</button>
+      <button id="cue-insert-pause-timed" title="Insert [[pause 3s]]">＋ PAUSE 3s</button>
+      <button id="cue-insert-stop" title="Insert [[stop]]">＋ STOP</button>
+      <button id="cue-insert-breath" title="Insert [[breath]]">＋ BREATH</button>
+      <div class="group">
+        <select id="cue-reaction-kind" title="Reaction kind">
+          <option value="smile">😊 smile</option>
+          <option value="laugh">😄 laugh</option>
+          <option value="nod">👍 nod</option>
+          <option value="wave">👋 wave</option>
+          <option value="point">👉 point</option>
+          <option value="wink">😉 wink</option>
+          <option value="shrug">🤷 shrug</option>
+          <option value="clap">👏 clap</option>
+          <option value="cry">😢 cry</option>
+        </select>
+        <button id="cue-insert-react" title="Insert [[react …]]">＋ REACT</button>
+      </div>
+      <button id="cue-insert-chapter" title="Insert [[chapter: …]]">＋ CHAPTER</button>
+      <button id="cue-insert-note" title="Insert [[note: …]]">＋ NOTE</button>
+      <button id="cue-format-ai" class="ai" title="Reformat with GPT — keeps every word, only adds breaks/timed pauses/cues">✨ FORMAT WITH AI</button>
+    </div>
+
+    <textarea id="script" placeholder="Paste your script here. Use cue marks like [[pause 3s]] or [[chapter: Intro]] for hands-free pacing."></textarea>
+  </section>
+
+  <section>
+    <div class="section-label">
+      <span>CUES</span>
+      <span id="cue-count" class="char-count">0 cues</span>
+    </div>
+    <div id="cue-list" class="cue-list">
+      <div class="cue-empty">No cues. Insert one with the toolbar above.</div>
+    </div>
+    <div class="cue-stats">
+      <div class="cue-stat"><div class="n" id="stat-pause">0</div><div class="l">PAUSE</div></div>
+      <div class="cue-stat"><div class="n" id="stat-stop">0</div><div class="l">STOP</div></div>
+      <div class="cue-stat"><div class="n" id="stat-react">0</div><div class="l">REACT</div></div>
+      <div class="cue-stat"><div class="n" id="stat-chapter">0</div><div class="l">CHAPT</div></div>
+      <div class="cue-stat"><div class="n" id="stat-note">0</div><div class="l">NOTE</div></div>
+    </div>
+  </section>
+  </div><!-- /col-center -->
+
+  <div class="col-right">
+  <section>
+    <div class="section-label">PLAYBACK</div>
+    <div class="grid-3">
+      <button id="btn-play" class="primary">▶ PLAY</button>
+      <button id="btn-reset">↺ RESET</button>
+      <button id="btn-slow">◀◀ SLOW</button>
+      <button id="btn-fast">FAST ▶▶</button>
+    </div>
+    <div class="grid-controls">
+      <button id="btn-jump-prev">◀ PREV CUE</button>
+      <button id="btn-jump-next">NEXT CUE ▶</button>
+      <button id="btn-countdown">⏱ COUNTDOWN</button>
+      <button id="btn-stumble">⚑ STUMBLE</button>
+    </div>
+    <div class="chapter-nav">
+      <select id="chapter-select">
+        <option value="">— jump to chapter —</option>
+      </select>
+      <button id="btn-jump-chapter">JUMP</button>
+      <button id="btn-snapshot" title="Save a version snapshot">⎘ SNAP</button>
+      <button id="btn-versions" title="Show version history">HIST</button>
+    </div>
+    <div class="countdown-row">
+      <label for="countdown">COUNTDOWN</label>
+      <input type="range" id="countdown" min="1" max="10" step="1" value="3" />
+      <span id="countdown-val" class="value">3s</span>
+    </div>
+  </section>
+
+  <section>
+    <div class="section-label">SETTINGS</div>
+    <div class="slider-row">
+      <label for="speed">SPEED</label>
+      <input type="range" id="speed" min="1" max="10" step="1" value="3" />
+      <span id="speed-val" class="value">3</span>
+    </div>
+    <div class="slider-row">
+      <label for="font">FONT SIZE</label>
+      <input type="range" id="font" min="16" max="96" step="1" value="32" />
+      <span id="font-val" class="value">32px</span>
+    </div>
+    <div class="slider-row">
+      <label for="opacity">OPACITY</label>
+      <input type="range" id="opacity" min="10" max="100" step="1" value="80" />
+      <span id="opacity-val" class="value">80%</span>
+    </div>
+    <div class="check-row">
+      <label for="smart-pace">SMART PACE</label>
+      <input type="checkbox" id="smart-pace" checked />
+    </div>
+    <div class="theme-row">
+      <label>THEME</label>
+      <div class="pills">
+        <button id="theme-dark" class="pill active">☾ DARK</button>
+        <button id="theme-light" class="pill">☀ LIGHT</button>
+      </div>
+    </div>
+    <div class="theme-row">
+      <label>MIRROR</label>
+      <div class="pills">
+        <button id="mirror-none" class="pill active">NONE</button>
+        <button id="mirror-h" class="pill">⇄ H</button>
+        <button id="mirror-v" class="pill">⇅ V</button>
+        <button id="mirror-both" class="pill">⇄⇅ BOTH</button>
+      </div>
+    </div>
+  </section>
+
+  <section class="voice-section">
+    <div class="section-label">
+      <span>VOICE PACING <span style="color:var(--pause-color)">BETA</span></span>
+      <span id="voice-status" class="char-count">off</span>
+    </div>
+    <div class="desc">Mic captures your speech and streams it to Deepgram Speech-to-Text. The app matches returned words against the script so the overlay can keep pace with what you actually said.</div>
+    <div class="voice-row">
+      <button id="voice-toggle" class="primary">🎙 START VOICE</button>
+      <button id="voice-clear">CLEAR</button>
+    </div>
+    <div id="voice-transcript" class="voice-transcript">—</div>
+  </section>
+
+  <section>
+    <div class="section-label">REFERENCE IMAGE</div>
+    <div id="image-preview" class="image-preview empty">
+      <span class="image-empty-text">No reference image. Click below to pick one — it will sit beside the scrolling text in the overlay.</span>
+      <img id="image-thumb" alt="" />
+    </div>
+    <div class="file-button-row">
+      <button id="load-image">▤ CHOOSE IMAGE</button>
+      <button id="clear-image">CLEAR</button>
+      <input type="file" id="image-input" accept="image/*" style="display:none" />
+    </div>
+  </section>
+
+  <section>
+    <div class="section-label">OVERLAY POSITION</div>
+    <div class="pos-grid">
+      <label>X<input type="number" id="pos-x" value="100" /></label>
+      <label>Y<input type="number" id="pos-y" value="60" /></label>
+      <label>WIDTH<input type="number" id="pos-w" value="960" min="200" /></label>
+      <label>HEIGHT<input type="number" id="pos-h" value="332" min="80" /></label>
+    </div>
+    <div class="file-button-row">
+      <button id="apply-pos" class="full primary">APPLY POSITION</button>
+    </div>
+  </section>
+  </div><!-- /col-right -->
+  </div><!-- /app-grid -->
+  </div><!-- /app-shell -->
+
+  <script src="../lib/script-parse.js"></script>
+  <script src="control.js"></script>
+</body>
+</html>

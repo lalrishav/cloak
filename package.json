@@ -5,7 +5,9 @@
   "main": "main.js",
   "scripts": {
     "start": "electron .",
-    "dev": "electron . --inspect"
+    "dev": "electron . --inspect",
+    "test": "node --test test/",
+    "coverage": "c8 --reporter=text --reporter=html --include='lib/**/*.js' --include='server/index.js' node --test test/"
   },
   "dependencies": {
     "mongodb": "^7.2.0",
@@ -13,6 +15,7 @@
     "ws": "^8.16.0"
   },
   "devDependencies": {
+    "c8": "^11.0.0",
     "electron": "^30.0.0"
   }
 }

@@ -1,0 +1,8 @@
+{
+  "name": "@cue/shared",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Shared contracts for Cue — event types, boot-response shape, version helpers",
+  "main": "index.js",
+  "type": "commonjs"
+}

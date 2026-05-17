@@ -1,0 +1,68 @@
+name: Desktop Release
+
+# Tag a commit `v1.2.0` to build, sign, and publish the desktop app.
+on:
+  push:
+    tags: ['v*']
+
+jobs:
+  build:
+    strategy:
+      matrix:
+        os: [macos-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci
+      - name: Build & package the desktop app
+        run: npm run dist -w @cue/desktop
+        env:
+          # Code-signing secrets. If unset, electron-builder still produces
+          # UNSIGNED artifacts that run with a Gatekeeper / SmartScreen prompt —
+          # fine for testing, but set these before any public download link.
+          CSC_LINK: ${{ secrets.CSC_LINK }}
+          CSC_KEY_PASSWORD: ${{ secrets.CSC_KEY_PASSWORD }}
+          APPLE_ID: ${{ secrets.APPLE_ID }}
+          APPLE_APP_SPECIFIC_PASSWORD: ${{ secrets.APPLE_APP_SPECIFIC_PASSWORD }}
+          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+      - name: Upload installers + update manifests
+        uses: actions/upload-artifact@v4
+        with:
+          name: cue-${{ matrix.os }}
+          path: |
+            apps/desktop/dist/*.dmg
+            apps/desktop/dist/*.exe
+            apps/desktop/dist/latest*.yml
+
+  publish-metadata:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      # Registers the release with the backend so the boot gate, the download
+      # page, and the dashboard immediately know about the new build.
+      # Requires repo secrets: CUE_API_URL, CUE_ADMIN_USER, CUE_ADMIN_PASS.
+      - name: Register release with the API
+        env:
+          CUE_API_URL: ${{ secrets.CUE_API_URL }}
+          CUE_ADMIN_USER: ${{ secrets.CUE_ADMIN_USER }}
+          CUE_ADMIN_PASS: ${{ secrets.CUE_ADMIN_PASS }}
+        run: |
+          if [ -z "$CUE_API_URL" ]; then
+            echo "CUE_API_URL secret not set — skipping release registration."
+            exit 0
+          fi
+          VERSION="${GITHUB_REF_NAME#v}"
+          JAR="$(mktemp)"
+          curl -sf -c "$JAR" -X POST "$CUE_API_URL/admin/login" \
+            -H 'Content-Type: application/json' \
+            -d "{\"user\":\"$CUE_ADMIN_USER\",\"pass\":\"$CUE_ADMIN_PASS\"}"
+          CSRF="$(grep cue_csrf "$JAR" | awk '{print $NF}')"
+          curl -sf -b "$JAR" -X POST "$CUE_API_URL/admin/releases" \
+            -H 'Content-Type: application/json' \
+            -H "x-csrf-token: $CSRF" \
+            -d "{\"version\":\"$VERSION\",\"channel\":\"stable\",\"notes\":\"Release $VERSION\"}"
+          echo "Registered release $VERSION with the API."

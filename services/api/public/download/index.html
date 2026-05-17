@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Download Cue</title>
+    <style>
+      :root { color-scheme: dark; }
+      * { box-sizing: border-box; }
+      body {
+        margin: 0;
+        min-height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+        background: radial-gradient(ellipse at top, #1a1a22, #0d0d0f);
+        color: #e8e8ea;
+      }
+      .card {
+        width: min(440px, 92vw);
+        padding: 48px 40px;
+        background: #16161a;
+        border: 1px solid #2a2a32;
+        border-radius: 16px;
+        text-align: center;
+      }
+      h1 { margin: 0 0 4px; font-size: 28px; letter-spacing: -0.5px; }
+      .tag { margin: 0 0 28px; color: #8a8a95; font-size: 14px; }
+      .version { margin: 0 0 24px; color: #6a6a75; font-size: 12px; min-height: 16px; }
+      .btn {
+        display: block;
+        width: 100%;
+        margin: 10px 0;
+        padding: 14px;
+        font-size: 15px;
+        font-weight: 600;
+        color: #0d0d0f;
+        background: #e8e8ea;
+        border: none;
+        border-radius: 10px;
+        text-decoration: none;
+        cursor: pointer;
+        transition: transform 0.06s ease, background 0.15s ease;
+      }
+      .btn:hover { background: #fff; }
+      .btn:active { transform: scale(0.99); }
+      .btn.secondary { color: #e8e8ea; background: #26262e; }
+      .btn.secondary:hover { background: #2f2f38; }
+      .foot { margin-top: 24px; font-size: 12px; color: #5a5a63; }
+    </style>
+  </head>
+  <body>
+    <main class="card">
+      <h1>Cue</h1>
+      <p class="tag">Capture-aware teleprompter</p>
+      <p class="version" id="version">&nbsp;</p>
+      <a class="btn" id="dl-mac" href="/v1/download/darwin">Download for macOS</a>
+      <a class="btn secondary" id="dl-win" href="/v1/download/win32">Download for Windows</a>
+      <p class="foot">Your download is counted anonymously to help us track adoption.</p>
+    </main>
+    <script>
+      fetch('/v1/release-info')
+        .then((r) => r.json())
+        .then((info) => {
+          const el = document.getElementById('version');
+          el.textContent = info && info.version ? 'Latest version ' + info.version : '';
+        })
+        .catch(() => {});
+    </script>
+  </body>
+</html>

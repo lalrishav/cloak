@@ -1,0 +1,67 @@
+{
+  "name": "@cue/desktop",
+  "version": "1.0.0",
+  "description": "Capture-aware teleprompter overlay",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron .",
+    "dev": "electron . --inspect",
+    "test": "node --test test/*.test.js",
+    "coverage": "c8 --reporter=text --reporter=html --include='lib/**/*.js' --include='server/index.js' node --test test/*.test.js",
+    "dist": "electron-builder",
+    "dist:mac": "electron-builder --mac",
+    "dist:win": "electron-builder --win"
+  },
+  "dependencies": {
+    "@cue/shared": "*",
+    "electron-updater": "^6.3.9",
+    "mongodb": "^7.2.0",
+    "qrcode": "^1.5.3",
+    "ws": "^8.16.0"
+  },
+  "devDependencies": {
+    "c8": "^11.0.0",
+    "electron": "^30.0.0",
+    "electron-builder": "^24.13.3"
+  },
+  "build": {
+    "appId": "com.lalrishav.cue",
+    "productName": "Cue",
+    "directories": {
+      "output": "dist",
+      "buildResources": "build"
+    },
+    "files": [
+      "main.js",
+      "preload.js",
+      "windows/**/*",
+      "lib/**/*",
+      "server/**/*",
+      "assets/**/*",
+      "!**/*.test.js",
+      "!_test-openai.js"
+    ],
+    "mac": {
+      "category": "public.app-category.productivity",
+      "target": ["dmg"],
+      "hardenedRuntime": true,
+      "entitlements": "build/entitlements.mac.plist",
+      "entitlementsInherit": "build/entitlements.mac.plist",
+      "icon": "assets/icon.png"
+    },
+    "win": {
+      "target": ["nsis"],
+      "icon": "assets/icon.png"
+    },
+    "nsis": {
+      "oneClick": true,
+      "perMachine": false
+    },
+    "publish": [
+      {
+        "provider": "generic",
+        "url": "https://downloads.example.com/cue"
+      }
+    ]
+  }
+}

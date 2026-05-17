@@ -1,0 +1,24 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci
+      # Runs every workspace's test suite. The desktop tests are electron-free
+      # unit tests; the API tests use an in-memory Mongo fake — neither needs a
+      # display or a running mongod.
+      - name: Test all workspaces
+        run: npm test
+      - name: Build the admin dashboard
+        run: npm run build -w @cue/admin-web

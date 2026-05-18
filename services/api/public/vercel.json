@@ -1,0 +1,15 @@
+{
+  "redirects": [
+    {
+      "source": "/v1/download/darwin",
+      "destination": "https://github.com/lalrishav/cloak/releases/download/v1.0.0/Cloak-1.0.0-arm64.dmg",
+      "permanent": false
+    }
+  ],
+  "rewrites": [
+    {
+      "source": "/download",
+      "destination": "/index.html"
+    }
+  ]
+}

@@ -3,10 +3,10 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Cue - Capture-Aware Teleprompter</title>
+    <title>Cloak - Capture-Aware Teleprompter</title>
     <meta
       name="description"
-      content="Cue is a capture-aware teleprompter for Mac, built for creators, meetings, demos, and recorded presentations."
+      content="Cloak is a capture-aware teleprompter for Mac, built for creators, meetings, demos, and recorded presentations."
     />
     <style>
       :root {
@@ -124,7 +124,7 @@
         inset: 0;
         background:
           linear-gradient(90deg, rgba(10, 14, 20, 0.92), rgba(10, 14, 20, 0.58) 47%, rgba(10, 14, 20, 0.18)),
-          url("/assets/cue-hero.png") center / cover no-repeat;
+          url("/assets/cloak-hero.png") center / cover no-repeat;
       }
 
       .hero::after {
@@ -430,7 +430,7 @@
         padding: 34px;
         background:
           linear-gradient(120deg, rgba(16, 20, 28, 0.9), rgba(57, 47, 90, 0.76)),
-          url("/assets/cue-hero.png") center / cover no-repeat;
+          url("/assets/cloak-hero.png") center / cover no-repeat;
       }
 
       .teleprompter {
@@ -638,7 +638,7 @@
         .hero::before {
           background:
             linear-gradient(180deg, rgba(10, 14, 20, 0.82), rgba(10, 14, 20, 0.64) 52%, rgba(10, 14, 20, 0.9)),
-            url("/assets/cue-hero.png") center / cover no-repeat;
+            url("/assets/cloak-hero.png") center / cover no-repeat;
         }
 
         .hero-inner {
@@ -722,7 +722,7 @@
     <nav class="site-nav" aria-label="Primary">
       <a class="brand" href="/">
         <span class="brand-mark">C</span>
-        <span>Cue</span>
+        <span>Cloak</span>
       </a>
       <div class="nav-links">
         <a href="#features">Features</a>
@@ -735,7 +735,7 @@
     <header class="hero">
       <div class="hero-inner">
         <p class="eyebrow"><span class="pulse" aria-hidden="true"></span>Voice pacing now supports Hindi and Hinglish</p>
-        <h1>Cue</h1>
+        <h1>Cloak</h1>
         <p class="hero-copy">
           A clean teleprompter overlay for calls, demos, and recordings. Keep your script in view,
           follow your speaking pace, and stay present without hunting for the next line.
@@ -756,7 +756,7 @@
         <div class="wrap">
           <div class="section-head">
             <h2>Built for speaking, not staring.</h2>
-            <p>Cue keeps the controls calm and the overlay focused so your attention stays on the person, camera, or recording.</p>
+            <p>Cloak keeps the controls calm and the overlay focused so your attention stays on the person, camera, or recording.</p>
           </div>
           <div class="feature-grid">
             <article class="feature-card">
@@ -782,10 +782,10 @@
         <div class="wrap">
           <div class="section-head">
             <h2>Feel the flow before you install.</h2>
-            <p>Switch modes, change the overlay size, and preview how Cue behaves during a live read.</p>
+            <p>Switch modes, change the overlay size, and preview how Cloak behaves during a live read.</p>
           </div>
 
-          <div class="demo-shell" aria-label="Interactive Cue preview">
+          <div class="demo-shell" aria-label="Interactive Cloak preview">
             <aside class="demo-panel">
               <div class="demo-title">
                 <span>Preview</span>
@@ -836,7 +836,7 @@
           <div class="download-band">
             <div>
               <h2>Ready when you are.</h2>
-              <p id="download-note">Download the latest macOS build and open Cue from Applications.</p>
+              <p id="download-note">Download the latest macOS build and open Cloak from Applications.</p>
             </div>
             <div class="download-actions">
               <a class="button primary" href="/v1/download/darwin" id="download-link">
@@ -868,7 +868,7 @@
             </div>
             <div class="faq-item">
               <button type="button">
-                <strong>Does Cue work with Hindi?</strong>
+                <strong>Does Cloak work with Hindi?</strong>
                 <span class="plus">+</span>
               </button>
               <p>Yes. Voice pacing now uses Deepgram multilingual mode by default and normalizes common Hindi and Hinglish transcript variants.</p>
@@ -878,7 +878,7 @@
                 <strong>Will the overlay be hidden in every recording app?</strong>
                 <span class="plus">+</span>
               </button>
-              <p>Cue uses documented OS-level content protection where available. Newer macOS ScreenCaptureKit apps can behave differently, so test with your exact recording setup.</p>
+              <p>Cloak uses documented OS-level content protection where available. Newer macOS ScreenCaptureKit apps can behave differently, so test with your exact recording setup.</p>
             </div>
           </div>
         </div>
@@ -887,7 +887,7 @@
 
     <footer>
       <div class="footer-inner">
-        <span>Cue - Capture-aware teleprompter</span>
+        <span>Cloak - Capture-aware teleprompter</span>
         <span id="footer-version">Stable release</span>
       </div>
     </footer>
@@ -909,8 +909,8 @@
             ? 'Latest macOS build: v' + version + (hasMac ? '' : ' - macOS artifact pending')
             : 'macOS build available from the latest stable release'
           downloadNote.textContent = version
-            ? 'Download Cue v' + version + ' for macOS.'
-            : 'Download the latest macOS build and open Cue from Applications.'
+            ? 'Download Cloak v' + version + ' for macOS.'
+            : 'Download the latest macOS build and open Cloak from Applications.'
           footerVersion.textContent = version ? 'Version ' + version : 'Stable release'
         })
         .catch(() => {

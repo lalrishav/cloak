@@ -1,5 +1,5 @@
 'use strict'
-const { isKnownEventType } = require('@cue/shared')
+const { isKnownEventType } = require('@cloak/shared')
 
 const eventsBodySchema = {
   type: 'object',

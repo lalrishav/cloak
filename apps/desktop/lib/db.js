@@ -1,5 +1,5 @@
 /*
- * MongoDB layer for Cue.
+ * MongoDB layer for Cloak.
  *
  * Connects to a local mongod by default (mongodb://127.0.0.1:27017).
  * Collections:
@@ -17,8 +17,8 @@
 const { MongoClient, ObjectId } = require('mongodb')
 
 const DEFAULT_URI =
-  process.env.CUE_MONGO_URI || 'mongodb://127.0.0.1:27017'
-const DEFAULT_DB = process.env.CUE_MONGO_DB || 'cue'
+  process.env.CLOAK_MONGO_URI || 'mongodb://127.0.0.1:27017'
+const DEFAULT_DB = process.env.CLOAK_MONGO_DB || 'cloak'
 
 let client = null
 let db = null

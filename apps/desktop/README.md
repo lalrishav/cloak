@@ -1,17 +1,17 @@
-# Cue — Capture-Aware Teleprompter
+# Cloak — Capture-Aware Teleprompter
 
-Cue is a desktop teleprompter overlay built with Electron. It floats above any application on your screen and scrolls your script at a configurable speed. On supported operating systems, the overlay is excluded from screen capture and screen sharing — visible on your physical display, but absent from recordings and shared screens.
+Cloak is a desktop teleprompter overlay built with Electron. It floats above any application on your screen and scrolls your script at a configurable speed. On supported operating systems, the overlay is excluded from screen capture and screen sharing — visible on your physical display, but absent from recordings and shared screens.
 
-The word here is **capture-aware**, not "undetectable." Cue uses documented OS-level APIs to opt the overlay window out of capture. Those APIs work in most cases and fail in a few specific ones. See *Known limitations* below.
+The word here is **capture-aware**, not "undetectable." Cloak uses documented OS-level APIs to opt the overlay window out of capture. Those APIs work in most cases and fail in a few specific ones. See *Known limitations* below.
 
 ## How it works
 
-Cue's overlay window calls `BrowserWindow.setContentProtection(true)` in the Electron main process. That single call wraps two native OS APIs:
+Cloak's overlay window calls `BrowserWindow.setContentProtection(true)` in the Electron main process. That single call wraps two native OS APIs:
 
 - **Windows**: `SetWindowDisplayAffinity(hwnd, WDA_EXCLUDEFROMCAPTURE)` — the desktop compositor (DWM) omits the window from any frame it hands to capture clients. Supported on Windows 10 version 2004 and later.
 - **macOS**: `NSWindowSharingNone` — the window server does not include the window in screen-sharing or recording feeds taken through the legacy `CGWindowList` / `CGDisplayStream` path.
 
-Cue does not use CSS tricks, video filters, or any heuristic the recording app could see through. The window is hidden at the OS compositor layer, before any pixels reach a recorder.
+Cloak does not use CSS tricks, video filters, or any heuristic the recording app could see through. The window is hidden at the OS compositor layer, before any pixels reach a recorder.
 
 ## Platform behavior
 
@@ -50,8 +50,8 @@ You can also put `DEEPGRAM_API_KEY=...` in a local `.env` file next to `main.js`
 For the packaged Mac app, put local keys in:
 
 ```bash
-mkdir -p "$HOME/Library/Application Support/Cue"
-nano "$HOME/Library/Application Support/Cue/.env"
+mkdir -p "$HOME/Library/Application Support/Cloak"
+nano "$HOME/Library/Application Support/Cloak/.env"
 ```
 
 Example:
@@ -66,21 +66,23 @@ The key is read once at startup and lives only in the main process — it is nev
 
 ## Install as a Mac app
 
-Build the `.app` bundle:
+Build a fresh `.dmg` and `.app` bundle:
 
 ```bash
 cd cue
 npm install
-npm run dist:mac -w @cue/desktop
+npm run build:dmg
 ```
 
-Then open `apps/desktop/dist/mac-arm64/Cue.app` or copy it into `/Applications`:
+Then install the built app into Applications:
 
 ```bash
-cp -R apps/desktop/dist/mac-arm64/Cue.app /Applications/
+npm run install:local
 ```
 
-After that, launch **Cue** from Launchpad, Spotlight, or Finder like any other app. If macOS blocks the locally built app, right-click **Cue.app**, choose **Open**, then confirm.
+By default this removes old `Cloak.app` copies from `~/Applications` and `/Applications`, then installs the fresh build to `/Applications/Cloak.app`. To install somewhere else, run `CLOAK_INSTALL_DIR=~/Applications npm run install:local`.
+
+After that, launch **Cloak** from Launchpad, Spotlight, or Finder like any other app. If macOS blocks the locally built app, right-click **Cloak.app**, choose **Open**, then confirm.
 
 Two windows open:
 
@@ -89,7 +91,7 @@ Two windows open:
 
 The control panel is a normal window and is *not* capture-protected. Share or screenshot it as you like. The overlay is the only protected surface.
 
-## Using Cue
+## Using Cloak
 
 1. Paste or load a `.txt` script in the control panel.
 2. Hit **PLAY** (or `⌘/Ctrl+Shift+Space`) to start scrolling.
@@ -106,11 +108,11 @@ The control panel is a normal window and is *not* capture-protected. Share or sc
 | `⌘/Ctrl+Shift+↑` | Speed +1 |
 | `⌘/Ctrl+Shift+↓` | Speed -1 |
 
-Shortcuts work even when another app is focused — useful when you're on a Zoom or Meet call and Cue is in the background.
+Shortcuts work even when another app is focused — useful when you're on a Zoom or Meet call and Cloak is in the background.
 
 ## Architecture
 
-Cue runs two `BrowserWindow` instances and a main process.
+Cloak runs two `BrowserWindow` instances and a main process.
 
 - **Main process** (`main.js`) — creates both windows, registers global shortcuts, owns the IPC routing. Calls `setContentProtection(true)` on the overlay window only.
 - **Overlay window** (`windows/overlay.html` + `overlay.js`) — frameless, transparent, `alwaysOnTop` at `screen-saver` level, `visibleOnFullScreen: true`. Click-through everywhere except the drag handle at the top. Scrolls text via `requestAnimationFrame`.
@@ -123,7 +125,7 @@ The control panel persists script, speed, font, opacity, and overlay position to
 
 ## Why `setContentProtection` and not something else
 
-A few approaches *don't* work and Cue avoids them:
+A few approaches *don't* work and Cloak avoids them:
 
 - **CSS or canvas tricks** — recording captures pixels, not DOM. There's nothing the renderer can do to hide them.
 - **Window manager hacks** — modern compositors (DWM, WindowServer, Wayland) ignore old-school z-order tricks. The compositor is the one assembling the capture frame.
@@ -136,7 +138,7 @@ A few approaches *don't* work and Cue avoids them:
 - **macOS ScreenCaptureKit**: Apple's newer capture framework can ignore `NSWindowSharingNone` for windows that opt in to sharing in specific ways. Recent Zoom, OBS, and the built-in Screenshot tool use SCK. Test before you rely on it.
 - **Hardware capture devices**: HDMI/USB capture reads the post-composited signal. No software protection applies.
 - **External cameras** pointed at your screen: also physics.
-- **Wayland / Linux**: `setContentProtection` is a no-op on Linux. Cue runs but the overlay is not capture-excluded.
+- **Wayland / Linux**: `setContentProtection` is a no-op on Linux. Cloak runs but the overlay is not capture-excluded.
 - **Multiple displays**: The overlay starts on the primary display. Drag it where you want it.
 
 ## License

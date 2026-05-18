@@ -1,7 +1,7 @@
 /*
- * Cue overlay renderer.
+ * Cloak overlay renderer.
  *
- * Rendering: builds DOM segments from the parser output. Cue markers are
+ * Rendering: builds DOM segments from the parser output. Cloak markers are
  * emitted as zero-width invisible <span class="cue-anchor"> elements whose
  * offsetTop tells the scroll loop where they sit on the page.
  *
@@ -512,7 +512,7 @@ function renderEmptyPlaceholder() {
   }
   setEmpty(true)
   const tn = document.createTextNode(
-    'Waiting for script… open the Cue control panel and paste your script.'
+    'Waiting for script… open the Cloak control panel and paste your script.'
   )
   textEl.insertBefore(tn, endMarker)
 }

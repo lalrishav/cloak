@@ -1,8 +1,8 @@
 {
-  "name": "@cue/admin-web",
+  "name": "@cloak/admin-web",
   "version": "1.0.0",
   "private": true,
-  "description": "Cue admin dashboard (React + Vite)",
+  "description": "Cloak admin dashboard (React + Vite)",
   "type": "module",
   "scripts": {
     "dev": "vite",

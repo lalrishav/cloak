@@ -1,5 +1,5 @@
 {
-  "name": "@cue/desktop",
+  "name": "@cloak/desktop",
   "version": "1.0.0",
   "description": "Capture-aware teleprompter overlay",
   "main": "main.js",
@@ -10,10 +10,12 @@
     "coverage": "c8 --reporter=text --reporter=html --include='lib/**/*.js' --include='server/index.js' node --test test/*.test.js",
     "dist": "electron-builder --config.npmRebuild=false",
     "dist:mac": "electron-builder --mac --config.npmRebuild=false",
-    "dist:win": "electron-builder --win --config.npmRebuild=false"
+    "dist:win": "electron-builder --win --config.npmRebuild=false",
+    "build:dmg": "bash ../../scripts/build-mac-dmg.sh",
+    "install:local": "bash ../../scripts/install-local-mac-app.sh"
   },
   "dependencies": {
-    "@cue/shared": "*",
+    "@cloak/shared": "*",
     "electron-updater": "^6.3.9",
     "mongodb": "^7.2.0",
     "qrcode": "^1.5.3",
@@ -26,8 +28,8 @@
     "electron-builder": "^24.13.3"
   },
   "build": {
-    "appId": "com.lalrishav.cue",
-    "productName": "Cue",
+    "appId": "com.lalrishav.cloak",
+    "productName": "Cloak",
     "directories": {
       "output": "dist",
       "buildResources": "build"
@@ -65,7 +67,7 @@
     "publish": [
       {
         "provider": "generic",
-        "url": "https://downloads.example.com/cue"
+        "url": "https://downloads.example.com/cloak"
       }
     ]
   }

@@ -1,8 +1,8 @@
 {
-  "name": "@cue/api",
+  "name": "@cloak/api",
   "version": "1.0.0",
   "private": true,
-  "description": "Cue admin + telemetry backend API (Fastify)",
+  "description": "Cloak admin + telemetry backend API (Fastify)",
   "main": "src/index.js",
   "scripts": {
     "dev": "node --watch src/index.js",
@@ -10,7 +10,7 @@
     "test": "node --test test/*.test.js"
   },
   "dependencies": {
-    "@cue/shared": "*",
+    "@cloak/shared": "*",
     "@fastify/cookie": "^9.4.0",
     "@fastify/cors": "^9.0.1",
     "@fastify/helmet": "^11.1.1",

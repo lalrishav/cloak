@@ -179,6 +179,17 @@ button, input, select, textarea {
   font-weight: 600;
   box-shadow: 0 0 12px rgba(232, 255, 71, 0.22);
 }
+.remote-connect-chip {
+  color: var(--accent);
+  border-color: rgba(232, 255, 71, 0.36);
+  background: rgba(232, 255, 71, 0.08);
+}
+.remote-connect-chip:hover {
+  color: var(--bg);
+  background: var(--accent);
+  border-color: var(--accent);
+  box-shadow: 0 0 14px rgba(232, 255, 71, 0.18);
+}
 
 /* ============================================================
    NAVBAR (in-window File / View / Help)
@@ -754,7 +765,7 @@ button.full { flex: 1; width: 100%; }
   text-transform: uppercase;
 }
 
-/* Cue pad */
+/* Cloak pad */
 .cue-pad {
   display: grid;
   gap: 6px;

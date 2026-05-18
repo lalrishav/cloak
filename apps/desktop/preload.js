@@ -1,6 +1,6 @@
 const { contextBridge, ipcRenderer } = require('electron')
 
-contextBridge.exposeInMainWorld('cue', {
+contextBridge.exposeInMainWorld('cloak', {
   // --- script + playback ---
   updateScript: (text) => ipcRenderer.send('script:update', text),
   formatScriptWithAi: (text) => ipcRenderer.invoke('script:format-ai', text),

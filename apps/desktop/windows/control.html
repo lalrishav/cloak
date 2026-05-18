@@ -2,7 +2,7 @@
 <html>
 <head>
   <meta charset="utf-8" />
-  <title>Cue — Teleprompter</title>
+  <title>Cloak — Teleprompter</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
@@ -16,7 +16,7 @@
        ============================================================ -->
   <header class="app-topbar">
     <div class="brand-block">
-      <span class="brand-name">CUE</span>
+      <span class="brand-name">CLOAK</span>
       <span class="brand-tag">Capture-aware teleprompter</span>
     </div>
 
@@ -38,6 +38,7 @@
     </div>
 
     <div class="topbar-cluster">
+      <button id="remote-connect-btn" class="topbar-chip remote-connect-chip" title="Connect remote using mobile — opens the QR code">📱 Connect phone</button>
       <button id="focus-btn" class="topbar-chip" title="Focus mode — hide rails (script only)">◧ Focus</button>
       <button id="overlay-toggle" class="topbar-chip" title="Show/hide overlay (⌘/Ctrl+Shift+O)">👁 Overlay</button>
       <button id="fs-btn" class="topbar-chip" title="Toggle fullscreen (F11)">⛶ Full</button>
@@ -70,7 +71,7 @@
     <div class="nav-menu" data-menu="help">
       <button class="nav-btn" data-nav-toggle="help">Help ▾</button>
       <div class="nav-dropdown" data-nav-dropdown="help" hidden>
-        <button class="nav-item" data-action="about">About Cue / Diagnostics</button>
+        <button class="nav-item" data-action="about">About Cloak / Diagnostics</button>
       </div>
     </div>
 
@@ -410,7 +411,7 @@
   <!-- first-launch analytics consent -->
   <div id="consent-modal" class="panel-modal" hidden>
     <div class="panel-card consent-card">
-      <h3>Help improve Cue</h3>
+      <h3>Help improve Cloak</h3>
       <p>Share anonymous usage data — which features you use, your app version, and crash counts. No script content, no transcripts, no personal info ever leaves your machine. You can change this anytime in Settings.</p>
       <div class="consent-actions">
         <button id="consent-decline">No thanks</button>

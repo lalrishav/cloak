@@ -1,13 +1,13 @@
-# Cue — monorepo
+# Cloak — monorepo
 
 Capture-aware teleprompter, organized as an npm-workspaces monorepo.
 
 | Workspace | Package | What it is |
 |---|---|---|
-| `apps/desktop` | `@cue/desktop` | The Electron teleprompter app |
-| `apps/admin-web` | `@cue/admin-web` | Admin dashboard — React + Vite |
-| `services/api` | `@cue/api` | Backend API — Fastify |
-| `packages/shared` | `@cue/shared` | Shared event/version contracts |
+| `apps/desktop` | `@cloak/desktop` | The Electron teleprompter app |
+| `apps/admin-web` | `@cloak/admin-web` | Admin dashboard — React + Vite |
+| `services/api` | `@cloak/api` | Backend API — Fastify |
+| `packages/shared` | `@cloak/shared` | Shared event/version contracts |
 
 ## Develop
 

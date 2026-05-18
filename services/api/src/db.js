@@ -1,6 +1,6 @@
 'use strict'
 /*
- * MongoDB layer for the Cue backend API.
+ * MongoDB layer for the Cloak backend API.
  *
  * Mirrors the conventions of apps/desktop/lib/db.js: connect({uri,dbName}) with a
  * short server-selection timeout, idempotent createIndex calls inside connect(),
@@ -13,13 +13,13 @@
  *
  * Collections: installs, appBoots, downloads, events, releases, versionPolicies.
  * Database name defaults to "cue_cloud" — deliberately separate from the desktop
- * app's local "cue" db.
+ * app's local "cloak" db.
  */
 const { MongoClient, ObjectId } = require('mongodb')
 const versionLib = require('./lib/version')
 
-const DEFAULT_URI = process.env.CUE_CLOUD_MONGO_URI || 'mongodb://127.0.0.1:27017'
-const DEFAULT_DB = process.env.CUE_CLOUD_MONGO_DB || 'cue_cloud'
+const DEFAULT_URI = process.env.CLOAK_CLOUD_MONGO_URI || 'mongodb://127.0.0.1:27017'
+const DEFAULT_DB = process.env.CLOAK_CLOUD_MONGO_DB || 'cloak_cloud'
 
 const DAY_MS = 24 * 60 * 60 * 1000
 

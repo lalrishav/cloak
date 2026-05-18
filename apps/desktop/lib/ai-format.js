@@ -9,12 +9,12 @@
  * comparing whitespace-normalized plainText. Any output that altered
  * words/punctuation is rejected.
  *
- * The system prompt + OpenAI constants live in @cue/shared/ai.js so the
+ * The system prompt + OpenAI constants live in @cloak/shared/ai.js so the
  * desktop app and the cloud AI proxy never drift apart.
  */
 
 const scriptParse = require('./script-parse')
-const sharedAi = require('@cue/shared/ai.js')
+const sharedAi = require('@cloak/shared/ai.js')
 
 const OPENAI_URL = sharedAi.OPENAI_RESPONSES_URL
 const DEFAULT_MODEL = sharedAi.OPENAI_DEFAULT_MODEL

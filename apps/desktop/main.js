@@ -357,7 +357,7 @@ function createInfoWindow() {
   infoWin = new BrowserWindow({
     width: 520,
     height: 540,
-    title: 'About Cue',
+    title: 'About Cloak',
     resizable: false,
     minimizable: false,
     maximizable: false,
@@ -388,7 +388,7 @@ function buildAppMenu() {
     template.push({
       label: app.name,
       submenu: [
-        { label: 'About Cue', click: () => createInfoWindow() },
+        { label: 'About Cloak', click: () => createInfoWindow() },
         { type: 'separator' },
         { role: 'services' },
         { type: 'separator' },
@@ -488,7 +488,7 @@ function buildAppMenu() {
     role: 'help',
     submenu: [
       {
-        label: 'About Cue / Diagnostics',
+        label: 'About Cloak / Diagnostics',
         click: () => createInfoWindow()
       }
     ]
@@ -503,7 +503,7 @@ function createControlWindow() {
     height: 880,
     minWidth: 720,
     minHeight: 540,
-    title: 'Cue — Teleprompter',
+    title: 'Cloak — Teleprompter',
     backgroundColor: '#0d0d0f',
     webPreferences: {
       preload: path.join(__dirname, 'preload.js'),
@@ -1340,7 +1340,7 @@ function registerIpc() {
       detail:
         'To verify capture-protection:\n\n' +
         '1) Start a screen recording (QuickTime, OBS, or Zoom share screen).\n' +
-        '2) Look at the recording preview — the Cue overlay should be missing on supported setups.\n' +
+        '2) Look at the recording preview — the Cloak overlay should be missing on supported setups.\n' +
         '3) You should still see the overlay on your physical display.\n\n' +
         'Note: macOS Cmd+Shift+5 / Screenshot.app and QuickTime on macOS 14+ use private capture paths that bypass NSWindowSharingNone — they will record the overlay. OBS Display Capture and Zoom screen share generally honor the flag.',
       buttons: ['OK']
@@ -1378,7 +1378,7 @@ function registerIpc() {
       return {
         ok: false,
         error:
-          'OPENAI_API_KEY is not set. Restart Cue with the env var, or enable the aiProxy feature flag.'
+          'OPENAI_API_KEY is not set. Restart Cloak with the env var, or enable the aiProxy feature flag.'
       }
     }
     const result = await aiFormat.format(text, { apiKey })
@@ -1643,11 +1643,11 @@ app.whenReady().then(async () => {
   if (bootInfo.killSwitch || bootInfo.updateRequired) {
     const r = await dialog.showMessageBox({
       type: bootInfo.killSwitch ? 'error' : 'warning',
-      title: bootInfo.killSwitch ? 'Cue is unavailable' : 'Update required',
+      title: bootInfo.killSwitch ? 'Cloak is unavailable' : 'Update required',
       message:
         bootInfo.message ||
         (bootInfo.killSwitch
-          ? 'This version of Cue has been disabled.'
+          ? 'This version of Cloak has been disabled.'
           : 'A required update is available before you can continue.'),
       buttons: bootInfo.updateUrl ? ['Download', 'Quit'] : ['Quit'],
       defaultId: 0,

@@ -7,8 +7,8 @@ function loadConfig(env = process.env) {
   return {
     port,
     host: env.HOST || '0.0.0.0',
-    mongoUri: env.CUE_CLOUD_MONGO_URI || 'mongodb://127.0.0.1:27017',
-    mongoDb: env.CUE_CLOUD_MONGO_DB || 'cue_cloud',
+    mongoUri: env.CLOAK_CLOUD_MONGO_URI || 'mongodb://127.0.0.1:27017',
+    mongoDb: env.CLOAK_CLOUD_MONGO_DB || 'cloak_cloud',
     downloadBaseUrl: (env.CUE_DOWNLOAD_BASE_URL || `http://localhost:${port}`).replace(/\/+$/, ''),
     adminUser: env.CUE_ADMIN_USER || 'admin',
     adminPass: env.CUE_ADMIN_PASS || 'change-me-locally',

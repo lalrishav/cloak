@@ -8,7 +8,7 @@
  * cue parser. The proxy's only job is to keep the OpenAI key server-side so the
  * shipped binary carries zero keys.
  */
-const sharedAi = require('@cue/shared/ai.js')
+const sharedAi = require('@cloak/shared/ai.js')
 
 const DEFAULT_TIMEOUT_MS = 30000
 

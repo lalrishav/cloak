@@ -627,7 +627,7 @@ async function refreshAiStatus() {
     aiHasKey = !!(s && s.hasKey)
     if (!aiHasKey) {
       btnFormatAi.disabled = true
-      btnFormatAi.title = 'OPENAI_API_KEY is not set. Restart Cue with the env var to enable.'
+      btnFormatAi.title = 'OPENAI_API_KEY is not set. Restart Cloak with the env var to enable.'
     } else {
       btnFormatAi.disabled = false
       btnFormatAi.title = `Reformat with ${(s && s.model) || 'GPT'} — keeps every word, only adds breaks/timed pauses/cues`
@@ -642,7 +642,7 @@ if (btnFormatAi) {
   btnFormatAi.addEventListener('click', async () => {
     if (aiFormatting) return
     if (!aiHasKey) {
-      alert('OPENAI_API_KEY is not set.\n\nRestart Cue from a shell where the env var is exported, e.g.:\n\n  OPENAI_API_KEY=sk-... npm start')
+      alert('OPENAI_API_KEY is not set.\n\nRestart Cloak from a shell where the env var is exported, e.g.:\n\n  OPENAI_API_KEY=sk-... npm start')
       return
     }
     const text = scriptEl.value
@@ -1704,6 +1704,11 @@ function dispatchPanelAction(action) {
     return
   }
   showPanelModal(action)
+}
+
+const remoteConnectBtn = $('remote-connect-btn')
+if (remoteConnectBtn) {
+  remoteConnectBtn.addEventListener('click', () => showPanelModal('remote'))
 }
 
 window.cue.onShowPanel((panel) => dispatchPanelAction(panel))

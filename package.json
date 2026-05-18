@@ -1,18 +1,20 @@
 {
-  "name": "cue",
+  "name": "cloak",
   "version": "1.0.0",
   "private": true,
-  "description": "Cue — capture-aware teleprompter (monorepo: desktop app, admin API, admin dashboard)",
+  "description": "Cloak — capture-aware teleprompter (monorepo: desktop app, admin API, admin dashboard)",
   "workspaces": [
     "packages/*",
     "services/*",
     "apps/*"
   ],
   "scripts": {
-    "dev:desktop": "npm run start -w @cue/desktop",
-    "dev:api": "npm run dev -w @cue/api",
-    "dev:admin": "npm run dev -w @cue/admin-web",
+    "dev:desktop": "npm run start -w @cloak/desktop",
+    "dev:api": "npm run dev -w @cloak/api",
+    "dev:admin": "npm run dev -w @cloak/admin-web",
     "dev": "concurrently -n api,admin -c blue,magenta \"npm:dev:api\" \"npm:dev:admin\"",
+    "build:dmg": "bash scripts/build-mac-dmg.sh",
+    "install:local": "bash scripts/install-local-mac-app.sh",
     "test": "npm run test --workspaces --if-present",
     "lint": "npm run lint --workspaces --if-present"
   },

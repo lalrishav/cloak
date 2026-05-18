@@ -1,6 +1,6 @@
 const { contextBridge, ipcRenderer } = require('electron')
 
-contextBridge.exposeInMainWorld('cloak', {
+const bridge = {
   // --- script + playback ---
   updateScript: (text) => ipcRenderer.send('script:update', text),
   formatScriptWithAi: (text) => ipcRenderer.invoke('script:format-ai', text),
@@ -162,4 +162,7 @@ contextBridge.exposeInMainWorld('cloak', {
   onShowPanel: (cb) =>
     ipcRenderer.on('control:show-panel', (_, v) => cb(v)),
   openAbout: () => ipcRenderer.send('about:open')
-})
+}
+
+contextBridge.exposeInMainWorld('cloak', bridge)
+contextBridge.exposeInMainWorld('cue', bridge)

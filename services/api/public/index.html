@@ -37,7 +37,7 @@
       .free-dot{width:7px;height:7px;background:var(--accent2);border-radius:50%}
 
       /* HERO */
-      .hero{min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:120px 20px 60px;position:relative;overflow:hidden}
+      .hero{min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:112px 20px 54px;position:relative;overflow:hidden}
       .hero::before{content:"";position:absolute;inset:0;background:radial-gradient(ellipse 80% 60% at 50% 0%,rgba(232,255,71,.07),transparent 70%),radial-gradient(ellipse 60% 50% at 80% 80%,rgba(123,224,187,.05),transparent);pointer-events:none}
       .hero-eyebrow{display:inline-flex;align-items:center;gap:8px;padding:6px 14px;background:rgba(232,255,71,.1);border:1px solid rgba(232,255,71,.25);border-radius:999px;font-size:13px;font-weight:700;color:var(--accent);letter-spacing:.06em;margin-bottom:28px}
       .eyebrow-dot{width:7px;height:7px;background:var(--accent);border-radius:50%;box-shadow:0 0 0 5px rgba(232,255,71,.15)}
@@ -51,6 +51,8 @@
       .btn-secondary{background:rgba(255,255,255,.08);border-color:rgba(255,255,255,.18);color:#fff}
       .hero-meta{font-size:13px;color:var(--muted)}
       .hero-meta strong{color:var(--accent2)}
+      .hero-shot{width:min(1040px,92vw);margin:34px auto 0;border:1px solid rgba(232,255,71,.18);border-radius:14px;overflow:hidden;box-shadow:0 26px 70px rgba(0,0,0,.58)}
+      .hero-shot img{width:100%;height:auto}
 
       /* SECTIONS */
       .section{padding:80px 20px}
@@ -155,26 +157,29 @@
         <a href="#how">How it works</a>
         <a href="#features">Features</a>
         <a href="#faq">FAQ</a>
-        <a class="nav-cta btn" href="https://github.com/lalrishav/cloak/releases/download/v1.0.0/Cloak-1.0.0-arm64.dmg">↓ Download</a>
+        <a class="nav-cta btn" href="/v1/download/darwin">↓ Download</a>
       </div>
     </nav>
 
     <header class="hero">
       <div class="hero-eyebrow">
         <span class="eyebrow-dot"></span>
-        Invisible to OBS · Zoom · Teams · Meet · Loom
+        Capture-aware teleprompter · Invisible to OBS · Zoom · Teams · Meet · Loom
       </div>
       <h1>Your script.<br><em>Invisible to cameras.</em></h1>
       <p class="hero-sub">
-        Cloak is a free teleprompter overlay that floats above your screen while staying completely hidden from every screen recorder and screen share.
+        Cloak is a free teleprompter overlay with mobile remote control that floats above your screen while staying completely hidden from every screen recorder and screen share.
       </p>
       <div class="hero-actions">
-        <a class="btn btn-primary" href="https://github.com/lalrishav/cloak/releases/download/v1.0.0/Cloak-1.0.0-arm64.dmg">
+        <a class="btn btn-primary" href="/v1/download/darwin">
           <span>↓</span> Download for macOS
         </a>
-        <a class="btn btn-secondary" href="#how">See how it works</a>
+        <a class="btn btn-secondary" href="#how">Try the preview</a>
       </div>
-      <p class="hero-meta">macOS 12+ · Apple Silicon · <strong>100% Free, always</strong></p>
+      <p class="hero-meta">macOS 12+ · Apple Silicon · phone remote over same Wi-Fi · <strong>100% Free, always</strong></p>
+      <div class="hero-shot">
+        <img src="/assets/cloak-hero.png" alt="Cloak teleprompter control panel with mobile remote" />
+      </div>
     </header>
 
     <main>
@@ -261,7 +266,7 @@
             <div class="feat">
               <div class="feat-icon" style="background:rgba(255,180,60,.1)">📱</div>
               <h3>Mobile remote</h3>
-              <p>Scan a QR code on your phone to control playback, speed, and bookmarks remotely. Same Wi-Fi — no setup.</p>
+              <p>Scan a QR code on your phone to control playback, speed, countdowns, chapter jumps, reactions, and reference focus. Same Wi-Fi — no setup.</p>
             </div>
             <div class="feat">
               <div class="feat-icon" style="background:rgba(232,255,71,.08)">✨</div>
@@ -299,7 +304,7 @@
               <p id="download-note">Download Cloak for macOS — free, no sign-in needed.</p>
             </div>
             <div class="download-actions">
-              <a class="btn btn-primary" href="https://github.com/lalrishav/cloak/releases/download/v1.0.0/Cloak-1.0.0-arm64.dmg" id="download-link" style="font-size:16px;padding:16px 28px">
+              <a class="btn btn-primary" href="/v1/download/darwin" id="download-link" style="font-size:16px;padding:16px 28px">
                 <span>↓</span> Download for macOS
               </a>
               <a class="btn btn-secondary" href="https://github.com/lalrishav/cloak/releases" target="_blank" rel="noopener" style="font-size:13px;padding:10px 18px">

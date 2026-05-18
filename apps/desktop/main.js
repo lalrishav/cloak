@@ -192,21 +192,30 @@ function sendToControl(channel, payload) {
 
 function readLocalEnv(name) {
   if (process.env[name]) return process.env[name]
+  const envPaths = []
   try {
-    const envPath = path.join(__dirname, '.env')
-    const text = fs.readFileSync(envPath, 'utf8')
-    const lines = text.split(/\r?\n/)
-    for (const line of lines) {
-      const trimmed = line.trim()
-      if (!trimmed || trimmed.startsWith('#')) continue
-      const idx = trimmed.indexOf('=')
-      if (idx < 1) continue
-      const key = trimmed.slice(0, idx).trim()
-      if (key !== name) continue
-      return trimmed.slice(idx + 1).trim().replace(/^["']|["']$/g, '')
-    }
+    envPaths.push(path.join(app.getPath('userData'), '.env'))
   } catch {
-    /* no local env */
+    /* app path unavailable early in startup */
+  }
+  envPaths.push(path.join(__dirname, '.env'))
+
+  for (const envPath of envPaths) {
+    try {
+      const text = fs.readFileSync(envPath, 'utf8')
+      const lines = text.split(/\r?\n/)
+      for (const line of lines) {
+        const trimmed = line.trim()
+        if (!trimmed || trimmed.startsWith('#')) continue
+        const idx = trimmed.indexOf('=')
+        if (idx < 1) continue
+        const key = trimmed.slice(0, idx).trim()
+        if (key !== name) continue
+        return trimmed.slice(idx + 1).trim().replace(/^["']|["']$/g, '')
+      }
+    } catch {
+      /* no local env at this path */
+    }
   }
   return ''
 }
@@ -673,7 +682,7 @@ async function startDeepgram() {
 
   const params = new URLSearchParams({
     model: 'nova-3',
-    language: 'en-US',
+    language: readLocalEnv('DEEPGRAM_LANGUAGE') || 'multi',
     encoding: 'linear16',
     sample_rate: '16000',
     channels: '1',
@@ -1185,7 +1194,7 @@ function registerIpc() {
   })
 
   ipcMain.handle('ai:status', () => ({
-    hasKey: aiProxyEnabled() || !!process.env.OPENAI_API_KEY,
+    hasKey: aiProxyEnabled() || !!readLocalEnv('OPENAI_API_KEY'),
     proxy: aiProxyEnabled(),
     model: aiFormat.DEFAULT_MODEL
   }))
@@ -1201,7 +1210,7 @@ function registerIpc() {
       return result
     }
     // local-key path (until the aiProxy feature flag fully rolls out)
-    const apiKey = process.env.OPENAI_API_KEY
+    const apiKey = readLocalEnv('OPENAI_API_KEY')
     if (!apiKey) {
       return {
         ok: false,

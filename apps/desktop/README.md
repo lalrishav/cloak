@@ -47,7 +47,40 @@ DEEPGRAM_API_KEY=... npm start
 
 You can also put `DEEPGRAM_API_KEY=...` in a local `.env` file next to `main.js`.
 
+For the packaged Mac app, put local keys in:
+
+```bash
+mkdir -p "$HOME/Library/Application Support/Cue"
+nano "$HOME/Library/Application Support/Cue/.env"
+```
+
+Example:
+
+```bash
+DEEPGRAM_API_KEY=your_deepgram_api_key_here
+DEEPGRAM_LANGUAGE=multi
+OPENAI_API_KEY=sk-...
+```
+
 The key is read once at startup and lives only in the main process — it is never written to disk, never sent to the renderer, and never persisted by the app. If `OPENAI_API_KEY` is unset, the button is disabled with a tooltip pointing here.
+
+## Install as a Mac app
+
+Build the `.app` bundle:
+
+```bash
+cd cue
+npm install
+npm run dist:mac -w @cue/desktop
+```
+
+Then open `apps/desktop/dist/mac-arm64/Cue.app` or copy it into `/Applications`:
+
+```bash
+cp -R apps/desktop/dist/mac-arm64/Cue.app /Applications/
+```
+
+After that, launch **Cue** from Launchpad, Spotlight, or Finder like any other app. If macOS blocks the locally built app, right-click **Cue.app**, choose **Open**, then confirm.
 
 Two windows open:
 

@@ -1,0 +1,991 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Cue - Capture-Aware Teleprompter</title>
+    <meta
+      name="description"
+      content="Cue is a capture-aware teleprompter for Mac, built for creators, meetings, demos, and recorded presentations."
+    />
+    <style>
+      :root {
+        color-scheme: light;
+        --ink: #16181d;
+        --muted: #626a73;
+        --line: #dfe4ea;
+        --soft: #f4f0e8;
+        --paper: #fffdf8;
+        --mint: #3b8f7a;
+        --mint-dark: #1e5f52;
+        --coral: #d96a4b;
+        --plum: #392f5a;
+        --night: #10141c;
+        --shadow: 0 18px 45px rgba(31, 35, 40, 0.16);
+      }
+
+      * { box-sizing: border-box; }
+
+      html { scroll-behavior: smooth; }
+
+      body {
+        margin: 0;
+        min-width: 320px;
+        color: var(--ink);
+        background: var(--paper);
+        font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+        line-height: 1.5;
+        overflow-x: hidden;
+      }
+
+      a { color: inherit; }
+
+      img {
+        display: block;
+        max-width: 100%;
+      }
+
+      button,
+      input {
+        font: inherit;
+      }
+
+      .site-nav {
+        position: fixed;
+        inset: 16px 16px auto;
+        z-index: 20;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 16px;
+        max-width: 1120px;
+        margin: 0 auto;
+        padding: 10px 12px 10px 16px;
+        color: #fff;
+        background: rgba(14, 18, 24, 0.62);
+        border: 1px solid rgba(255, 255, 255, 0.18);
+        border-radius: 8px;
+        backdrop-filter: blur(18px);
+      }
+
+      .brand {
+        display: inline-flex;
+        align-items: center;
+        gap: 10px;
+        font-weight: 800;
+        text-decoration: none;
+      }
+
+      .brand-mark {
+        display: grid;
+        width: 28px;
+        height: 28px;
+        place-items: center;
+        color: #fff;
+        background: var(--mint);
+        border-radius: 7px;
+        box-shadow: inset 0 -8px 12px rgba(0, 0, 0, 0.12);
+      }
+
+      .nav-links {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+
+      .nav-links a {
+        padding: 8px 10px;
+        color: rgba(255, 255, 255, 0.84);
+        font-size: 14px;
+        text-decoration: none;
+        border-radius: 6px;
+      }
+
+      .nav-links a:hover,
+      .nav-links a:focus-visible {
+        color: #fff;
+        background: rgba(255, 255, 255, 0.12);
+        outline: none;
+      }
+
+      .hero {
+        position: relative;
+        min-height: 92vh;
+        display: grid;
+        align-items: end;
+        overflow: hidden;
+        color: #fff;
+        background: var(--night);
+      }
+
+      .hero::before {
+        content: "";
+        position: absolute;
+        inset: 0;
+        background:
+          linear-gradient(90deg, rgba(10, 14, 20, 0.92), rgba(10, 14, 20, 0.58) 47%, rgba(10, 14, 20, 0.18)),
+          url("/assets/cue-hero.png") center / cover no-repeat;
+      }
+
+      .hero::after {
+        content: "";
+        position: absolute;
+        inset: auto 0 0;
+        height: 34%;
+        background: linear-gradient(0deg, rgba(16, 20, 28, 0.78), rgba(16, 20, 28, 0));
+      }
+
+      .hero-inner {
+        position: relative;
+        z-index: 1;
+        width: min(1120px, calc(100% - 32px));
+        margin: 0 auto;
+        padding: 136px 0 68px;
+      }
+
+      .eyebrow {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        margin: 0 0 18px;
+        padding: 7px 10px;
+        color: #dff7ef;
+        background: rgba(59, 143, 122, 0.22);
+        border: 1px solid rgba(166, 226, 207, 0.3);
+        border-radius: 999px;
+        font-size: 13px;
+        font-weight: 700;
+      }
+
+      .pulse {
+        width: 8px;
+        height: 8px;
+        background: #7be0bb;
+        border-radius: 50%;
+        box-shadow: 0 0 0 6px rgba(123, 224, 187, 0.14);
+      }
+
+      h1 {
+        max-width: 650px;
+        margin: 0;
+        font-size: clamp(48px, 8vw, 92px);
+        line-height: 0.94;
+        letter-spacing: 0;
+      }
+
+      .hero-copy {
+        max-width: 590px;
+        margin: 22px 0 0;
+        color: rgba(255, 255, 255, 0.82);
+        font-size: 19px;
+      }
+
+      .hero-actions {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 12px;
+        margin-top: 30px;
+      }
+
+      .button {
+        display: inline-flex;
+        min-height: 48px;
+        align-items: center;
+        justify-content: center;
+        gap: 10px;
+        padding: 12px 18px;
+        border: 1px solid transparent;
+        border-radius: 8px;
+        font-weight: 800;
+        text-decoration: none;
+        cursor: pointer;
+        transition: transform 0.12s ease, border-color 0.12s ease, background 0.12s ease;
+      }
+
+      .button:hover { transform: translateY(-1px); }
+
+      .button.primary {
+        color: #102019;
+        background: #f7fff9;
+      }
+
+      .button.secondary {
+        color: #fff;
+        background: rgba(255, 255, 255, 0.12);
+        border-color: rgba(255, 255, 255, 0.22);
+      }
+
+      .button.dark {
+        color: #fff;
+        background: var(--night);
+      }
+
+      .button.ghost {
+        color: var(--ink);
+        background: transparent;
+        border-color: var(--line);
+      }
+
+      .release-line {
+        min-height: 22px;
+        margin-top: 12px;
+        color: rgba(255, 255, 255, 0.66);
+        font-size: 14px;
+      }
+
+      .section {
+        padding: 76px 16px;
+      }
+
+      .section.soft { background: var(--soft); }
+
+      .wrap {
+        width: min(1120px, 100%);
+        margin: 0 auto;
+      }
+
+      .section-head {
+        display: flex;
+        align-items: end;
+        justify-content: space-between;
+        gap: 24px;
+        margin-bottom: 26px;
+      }
+
+      h2 {
+        margin: 0;
+        font-size: clamp(30px, 4vw, 48px);
+        line-height: 1.04;
+        letter-spacing: 0;
+      }
+
+      .section-head p {
+        max-width: 430px;
+        margin: 0;
+        color: var(--muted);
+      }
+
+      .feature-grid {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 14px;
+      }
+
+      .feature-card {
+        min-height: 220px;
+        padding: 22px;
+        background: #fff;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        box-shadow: 0 8px 22px rgba(31, 35, 40, 0.06);
+      }
+
+      .feature-card strong {
+        display: block;
+        margin: 14px 0 8px;
+        font-size: 19px;
+      }
+
+      .feature-card p {
+        margin: 0;
+        color: var(--muted);
+      }
+
+      .icon {
+        display: grid;
+        width: 38px;
+        height: 38px;
+        place-items: center;
+        color: #fff;
+        background: var(--plum);
+        border-radius: 8px;
+      }
+
+      .icon.mint { background: var(--mint); }
+      .icon.coral { background: var(--coral); }
+
+      .demo-shell {
+        display: grid;
+        grid-template-columns: 280px 1fr;
+        min-height: 520px;
+        overflow: hidden;
+        background: #fff;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        box-shadow: var(--shadow);
+      }
+
+      .demo-panel {
+        padding: 18px;
+        background: #f8faf9;
+        border-right: 1px solid var(--line);
+      }
+
+      .demo-title {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 18px;
+        font-weight: 800;
+      }
+
+      .segmented {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 4px;
+        padding: 4px;
+        background: #e8ecea;
+        border-radius: 8px;
+      }
+
+      .segmented button {
+        min-height: 36px;
+        color: #38413f;
+        background: transparent;
+        border: 0;
+        border-radius: 6px;
+        cursor: pointer;
+      }
+
+      .segmented button.active {
+        color: #fff;
+        background: var(--mint-dark);
+      }
+
+      .control-group {
+        margin-top: 20px;
+      }
+
+      .control-group label {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
+        margin-bottom: 8px;
+        color: var(--muted);
+        font-size: 13px;
+        font-weight: 700;
+      }
+
+      input[type="range"] {
+        width: 100%;
+        accent-color: var(--mint);
+      }
+
+      .toggle-row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        margin-top: 16px;
+        padding: 12px;
+        background: #fff;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+      }
+
+      .switch {
+        position: relative;
+        width: 48px;
+        height: 28px;
+      }
+
+      .switch input {
+        position: absolute;
+        opacity: 0;
+      }
+
+      .switch span {
+        position: absolute;
+        inset: 0;
+        background: #cfd6d2;
+        border-radius: 999px;
+        cursor: pointer;
+      }
+
+      .switch span::after {
+        content: "";
+        position: absolute;
+        top: 4px;
+        left: 4px;
+        width: 20px;
+        height: 20px;
+        background: #fff;
+        border-radius: 50%;
+        transition: transform 0.16s ease;
+      }
+
+      .switch input:checked + span {
+        background: var(--mint);
+      }
+
+      .switch input:checked + span::after {
+        transform: translateX(20px);
+      }
+
+      .stage {
+        position: relative;
+        min-height: 520px;
+        padding: 34px;
+        background:
+          linear-gradient(120deg, rgba(16, 20, 28, 0.9), rgba(57, 47, 90, 0.76)),
+          url("/assets/cue-hero.png") center / cover no-repeat;
+      }
+
+      .teleprompter {
+        position: absolute;
+        inset: 52px 46px 52px auto;
+        width: min(520px, calc(100% - 92px));
+        padding: 28px;
+        color: rgba(255, 255, 255, 0.9);
+        background: rgba(9, 12, 18, 0.66);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        border-radius: 8px;
+        backdrop-filter: blur(16px);
+      }
+
+      .prompt-line {
+        margin: 0 0 14px;
+        font-size: var(--demo-font, 26px);
+        line-height: 1.34;
+      }
+
+      .prompt-line.active {
+        color: #b9f4d8;
+      }
+
+      .cue-token {
+        display: inline-block;
+        margin-left: 6px;
+        padding: 2px 8px;
+        color: #ffe5d7;
+        background: rgba(217, 106, 75, 0.2);
+        border: 1px solid rgba(217, 106, 75, 0.34);
+        border-radius: 999px;
+        font-size: 13px;
+        vertical-align: middle;
+      }
+
+      .voice-bar {
+        position: absolute;
+        right: 46px;
+        bottom: 28px;
+        display: flex;
+        align-items: end;
+        gap: 5px;
+        height: 42px;
+      }
+
+      .voice-bar i {
+        width: 6px;
+        height: 18px;
+        background: #7be0bb;
+        border-radius: 6px;
+        animation: wave 1s ease-in-out infinite;
+      }
+
+      .voice-bar i:nth-child(2) { animation-delay: 0.12s; }
+      .voice-bar i:nth-child(3) { animation-delay: 0.24s; }
+      .voice-bar i:nth-child(4) { animation-delay: 0.36s; }
+      .voice-bar i:nth-child(5) { animation-delay: 0.48s; }
+
+      @keyframes wave {
+        0%, 100% { height: 12px; opacity: 0.55; }
+        50% { height: 40px; opacity: 1; }
+      }
+
+      .download-band {
+        display: grid;
+        grid-template-columns: 1fr auto;
+        align-items: center;
+        gap: 22px;
+        padding: 34px;
+        color: #fff;
+        background: var(--night);
+        border-radius: 8px;
+      }
+
+      .download-band h2 {
+        font-size: clamp(28px, 4vw, 42px);
+      }
+
+      .download-band p {
+        margin: 8px 0 0;
+        color: rgba(255, 255, 255, 0.68);
+      }
+
+      .download-actions {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: flex-end;
+        gap: 10px;
+      }
+
+      .faq-list {
+        border-top: 1px solid var(--line);
+      }
+
+      .faq-item {
+        border-bottom: 1px solid var(--line);
+      }
+
+      .faq-item button {
+        display: flex;
+        width: 100%;
+        align-items: center;
+        justify-content: space-between;
+        gap: 18px;
+        padding: 20px 0;
+        color: var(--ink);
+        background: transparent;
+        border: 0;
+        text-align: left;
+        cursor: pointer;
+      }
+
+      .faq-item strong {
+        font-size: 18px;
+      }
+
+      .faq-item p {
+        display: none;
+        max-width: 760px;
+        margin: 0 0 20px;
+        color: var(--muted);
+      }
+
+      .faq-item.open p {
+        display: block;
+      }
+
+      .faq-item .plus {
+        flex: 0 0 auto;
+        width: 28px;
+        height: 28px;
+        display: grid;
+        place-items: center;
+        color: #fff;
+        background: var(--mint);
+        border-radius: 50%;
+      }
+
+      .faq-item.open .plus {
+        background: var(--coral);
+      }
+
+      footer {
+        padding: 26px 16px;
+        color: #65706d;
+        background: #f8faf9;
+        border-top: 1px solid var(--line);
+      }
+
+      .footer-inner {
+        width: min(1120px, 100%);
+        margin: 0 auto;
+        display: flex;
+        justify-content: space-between;
+        gap: 16px;
+        flex-wrap: wrap;
+      }
+
+      .toast {
+        position: fixed;
+        left: 50%;
+        bottom: 22px;
+        z-index: 30;
+        transform: translate(-50%, 20px);
+        padding: 10px 14px;
+        color: #fff;
+        background: var(--night);
+        border-radius: 8px;
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity 0.16s ease, transform 0.16s ease;
+      }
+
+      .toast.show {
+        opacity: 1;
+        transform: translate(-50%, 0);
+      }
+
+      @media (max-width: 860px) {
+        .wrap,
+        .hero-inner {
+          width: 100%;
+          max-width: 100%;
+        }
+
+        .hero-inner {
+          width: calc(100% - 32px);
+          max-width: calc(100% - 32px);
+        }
+
+        .site-nav {
+          inset: 10px 10px auto;
+          width: calc(100% - 20px);
+        }
+
+        .nav-links a:not(.nav-download) {
+          display: none;
+        }
+
+        .hero {
+          min-height: 90vh;
+        }
+
+        .hero::before {
+          background:
+            linear-gradient(180deg, rgba(10, 14, 20, 0.82), rgba(10, 14, 20, 0.64) 52%, rgba(10, 14, 20, 0.9)),
+            url("/assets/cue-hero.png") center / cover no-repeat;
+        }
+
+        .hero-inner {
+          padding-top: 116px;
+        }
+
+        .section-head,
+        .download-band,
+        .demo-shell {
+          display: grid;
+          grid-template-columns: 1fr;
+        }
+
+        .section-head {
+          align-items: start;
+        }
+
+        h1,
+        .hero-copy,
+        .section-head p {
+          max-width: calc(100vw - 28px);
+          overflow-wrap: break-word;
+        }
+
+        h2 {
+          max-width: 330px;
+          overflow-wrap: break-word;
+        }
+
+        .feature-grid {
+          grid-template-columns: 1fr;
+        }
+
+        .demo-panel {
+          border-right: 0;
+          border-bottom: 1px solid var(--line);
+        }
+
+        .teleprompter {
+          inset: 32px 22px 72px;
+          width: auto;
+          padding: 20px;
+        }
+
+        .stage {
+          min-height: 440px;
+          padding: 22px;
+        }
+
+        .voice-bar {
+          right: 28px;
+        }
+
+        .download-actions {
+          justify-content: flex-start;
+        }
+      }
+
+      @media (max-width: 520px) {
+        .hero-actions,
+        .download-actions {
+          align-items: stretch;
+          flex-direction: column;
+        }
+
+        .button {
+          width: 100%;
+        }
+
+        .section {
+          padding: 58px 14px;
+        }
+
+        .download-band {
+          padding: 24px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <nav class="site-nav" aria-label="Primary">
+      <a class="brand" href="/">
+        <span class="brand-mark">C</span>
+        <span>Cue</span>
+      </a>
+      <div class="nav-links">
+        <a href="#features">Features</a>
+        <a href="#demo">Demo</a>
+        <a href="#faq">FAQ</a>
+        <a class="nav-download" href="/v1/download/darwin">Download</a>
+      </div>
+    </nav>
+
+    <header class="hero">
+      <div class="hero-inner">
+        <p class="eyebrow"><span class="pulse" aria-hidden="true"></span>Voice pacing now supports Hindi and Hinglish</p>
+        <h1>Cue</h1>
+        <p class="hero-copy">
+          A clean teleprompter overlay for calls, demos, and recordings. Keep your script in view,
+          follow your speaking pace, and stay present without hunting for the next line.
+        </p>
+        <div class="hero-actions">
+          <a class="button primary" href="/v1/download/darwin" id="hero-download">
+            <span aria-hidden="true">↓</span>
+            Download for macOS
+          </a>
+          <a class="button secondary" href="#demo">Try the preview</a>
+        </div>
+        <div class="release-line" id="release-line">Checking latest release...</div>
+      </div>
+    </header>
+
+    <main>
+      <section class="section soft" id="features">
+        <div class="wrap">
+          <div class="section-head">
+            <h2>Built for speaking, not staring.</h2>
+            <p>Cue keeps the controls calm and the overlay focused so your attention stays on the person, camera, or recording.</p>
+          </div>
+          <div class="feature-grid">
+            <article class="feature-card">
+              <span class="icon mint" aria-hidden="true">◌</span>
+              <strong>Capture-aware overlay</strong>
+              <p>The teleprompter floats above your work while using OS-level content protection where supported.</p>
+            </article>
+            <article class="feature-card">
+              <span class="icon coral" aria-hidden="true">≋</span>
+              <strong>Voice pacing</strong>
+              <p>Deepgram speech recognition follows your words and advances the overlay as you speak.</p>
+            </article>
+            <article class="feature-card">
+              <span class="icon" aria-hidden="true">⌘</span>
+              <strong>Fast control</strong>
+              <p>Adjust speed, font size, opacity, position, and script cues without opening a bulky editor.</p>
+            </article>
+          </div>
+        </div>
+      </section>
+
+      <section class="section" id="demo">
+        <div class="wrap">
+          <div class="section-head">
+            <h2>Feel the flow before you install.</h2>
+            <p>Switch modes, change the overlay size, and preview how Cue behaves during a live read.</p>
+          </div>
+
+          <div class="demo-shell" aria-label="Interactive Cue preview">
+            <aside class="demo-panel">
+              <div class="demo-title">
+                <span>Preview</span>
+                <span id="mode-label">Voice</span>
+              </div>
+              <div class="segmented" role="tablist" aria-label="Preview mode">
+                <button class="active" type="button" data-mode="voice">Voice</button>
+                <button type="button" data-mode="manual">Manual</button>
+                <button type="button" data-mode="focus">Focus</button>
+              </div>
+              <div class="control-group">
+                <label for="font-range"><span>Font size</span><span id="font-value">26</span></label>
+                <input id="font-range" type="range" min="20" max="38" value="26" />
+              </div>
+              <div class="control-group">
+                <label for="opacity-range"><span>Overlay opacity</span><span id="opacity-value">66%</span></label>
+                <input id="opacity-range" type="range" min="42" max="86" value="66" />
+              </div>
+              <div class="toggle-row">
+                <div>
+                  <strong>Smart pace</strong>
+                  <div style="color: var(--muted); font-size: 13px;">Match spoken words</div>
+                </div>
+                <label class="switch">
+                  <input id="pace-toggle" type="checkbox" checked />
+                  <span aria-hidden="true"></span>
+                </label>
+              </div>
+            </aside>
+
+            <div class="stage">
+              <div class="teleprompter" id="teleprompter">
+                <p class="prompt-line">Today I want to tell you a simple story.</p>
+                <p class="prompt-line active">Ek gaon me ek choti bachi thi <span class="cue-token">breath</span></p>
+                <p class="prompt-line">She looked at the camera and spoke slowly.</p>
+                <p class="prompt-line">No rush, no panic, just the next line.</p>
+              </div>
+              <div class="voice-bar" id="voice-bar" aria-hidden="true">
+                <i></i><i></i><i></i><i></i><i></i>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="section soft" id="download">
+        <div class="wrap">
+          <div class="download-band">
+            <div>
+              <h2>Ready when you are.</h2>
+              <p id="download-note">Download the latest macOS build and open Cue from Applications.</p>
+            </div>
+            <div class="download-actions">
+              <a class="button primary" href="/v1/download/darwin" id="download-link">
+                <span aria-hidden="true">↓</span>
+                Download for macOS
+              </a>
+              <button class="button secondary" type="button" id="copy-link">
+                <span aria-hidden="true">⧉</span>
+                Copy link
+              </button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="section" id="faq">
+        <div class="wrap">
+          <div class="section-head">
+            <h2>Good to know.</h2>
+            <p>Short answers for installing and using the current macOS build.</p>
+          </div>
+          <div class="faq-list">
+            <div class="faq-item open">
+              <button type="button">
+                <strong>What should my website download link be?</strong>
+                <span class="plus">−</span>
+              </button>
+              <p>Use <code>/v1/download/darwin</code>. The API records the click and redirects to the hosted DMG configured in your latest stable release.</p>
+            </div>
+            <div class="faq-item">
+              <button type="button">
+                <strong>Does Cue work with Hindi?</strong>
+                <span class="plus">+</span>
+              </button>
+              <p>Yes. Voice pacing now uses Deepgram multilingual mode by default and normalizes common Hindi and Hinglish transcript variants.</p>
+            </div>
+            <div class="faq-item">
+              <button type="button">
+                <strong>Will the overlay be hidden in every recording app?</strong>
+                <span class="plus">+</span>
+              </button>
+              <p>Cue uses documented OS-level content protection where available. Newer macOS ScreenCaptureKit apps can behave differently, so test with your exact recording setup.</p>
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <footer>
+      <div class="footer-inner">
+        <span>Cue - Capture-aware teleprompter</span>
+        <span id="footer-version">Stable release</span>
+      </div>
+    </footer>
+
+    <div class="toast" id="toast" role="status" aria-live="polite">Download link copied</div>
+
+    <script>
+      const releaseLine = document.getElementById('release-line')
+      const downloadNote = document.getElementById('download-note')
+      const footerVersion = document.getElementById('footer-version')
+      const downloadPath = '/v1/download/darwin'
+
+      fetch('/v1/release-info')
+        .then((response) => response.json())
+        .then((info) => {
+          const version = info && info.version ? info.version : ''
+          const hasMac = info && Array.isArray(info.platforms) && info.platforms.includes('darwin')
+          releaseLine.textContent = version
+            ? 'Latest macOS build: v' + version + (hasMac ? '' : ' - macOS artifact pending')
+            : 'macOS build available from the latest stable release'
+          downloadNote.textContent = version
+            ? 'Download Cue v' + version + ' for macOS.'
+            : 'Download the latest macOS build and open Cue from Applications.'
+          footerVersion.textContent = version ? 'Version ' + version : 'Stable release'
+        })
+        .catch(() => {
+          releaseLine.textContent = 'macOS build available from the latest stable release'
+        })
+
+      const modeLabel = document.getElementById('mode-label')
+      const teleprompter = document.getElementById('teleprompter')
+      const voiceBar = document.getElementById('voice-bar')
+      const modeCopy = {
+        voice: ['Voice', 'Ek gaon me ek choti bachi thi'],
+        manual: ['Manual', 'Move through the script at your own speed.'],
+        focus: ['Focus', 'Keep only the current thought in view.']
+      }
+
+      document.querySelectorAll('[data-mode]').forEach((button) => {
+        button.addEventListener('click', () => {
+          document.querySelectorAll('[data-mode]').forEach((item) => item.classList.remove('active'))
+          button.classList.add('active')
+          const mode = button.dataset.mode
+          modeLabel.textContent = modeCopy[mode][0]
+          teleprompter.querySelector('.active').childNodes[0].nodeValue = modeCopy[mode][1] + ' '
+          voiceBar.style.display = mode === 'voice' ? 'flex' : 'none'
+        })
+      })
+
+      const fontRange = document.getElementById('font-range')
+      const fontValue = document.getElementById('font-value')
+      fontRange.addEventListener('input', () => {
+        fontValue.textContent = fontRange.value
+        teleprompter.style.setProperty('--demo-font', fontRange.value + 'px')
+      })
+
+      const opacityRange = document.getElementById('opacity-range')
+      const opacityValue = document.getElementById('opacity-value')
+      opacityRange.addEventListener('input', () => {
+        opacityValue.textContent = opacityRange.value + '%'
+        teleprompter.style.background = 'rgba(9, 12, 18, ' + Number(opacityRange.value) / 100 + ')'
+      })
+
+      document.getElementById('pace-toggle').addEventListener('change', (event) => {
+        voiceBar.style.opacity = event.target.checked ? '1' : '0.22'
+      })
+
+      document.querySelectorAll('.faq-item button').forEach((button) => {
+        button.addEventListener('click', () => {
+          const item = button.closest('.faq-item')
+          const willOpen = !item.classList.contains('open')
+          document.querySelectorAll('.faq-item').forEach((faq) => {
+            faq.classList.remove('open')
+            faq.querySelector('.plus').textContent = '+'
+          })
+          if (willOpen) {
+            item.classList.add('open')
+            item.querySelector('.plus').textContent = '−'
+          }
+        })
+      })
+
+      document.getElementById('copy-link').addEventListener('click', async () => {
+        const absoluteUrl = new URL(downloadPath, window.location.origin).toString()
+        try {
+          await navigator.clipboard.writeText(absoluteUrl)
+        } catch {
+          const input = document.createElement('input')
+          input.value = absoluteUrl
+          document.body.appendChild(input)
+          input.select()
+          document.execCommand('copy')
+          input.remove()
+        }
+        const toast = document.getElementById('toast')
+        toast.classList.add('show')
+        window.setTimeout(() => toast.classList.remove('show'), 1600)
+      })
+    </script>
+  </body>
+</html>

@@ -6,7 +6,7 @@
 const test = require('node:test')
 const assert = require('node:assert/strict')
 
-const { tokenize, buildVoiceWords, findBestMatch, wordSimilarity } = require('../lib/voice-match')
+const { normalizeWord, tokenize, buildVoiceWords, findBestMatch, wordSimilarity } = require('../lib/voice-match')
 
 test('tokenize: connector punctuation becomes word boundaries', () => {
   assert.deepEqual(tokenize('desktop-level state/of/the/art'), [
@@ -35,6 +35,25 @@ test('tokenize: normalizes common speech-to-text variants', () => {
     'dialogs',
     'renderer'
   ])
+})
+
+test('tokenize: normalizes Hindi Devanagari transcript to Roman Hindi words', () => {
+  assert.deepEqual(tokenize('एक गांव में एक छोटी बच्ची थी'), [
+    'ek',
+    'gaon',
+    'me',
+    'ek',
+    'choti',
+    'bachi',
+    'thi'
+  ])
+})
+
+test('normalizeWord: handles Hindi spelling variants used by Deepgram', () => {
+  assert.equal(normalizeWord('में'), 'me')
+  assert.equal(normalizeWord('गांव'), 'gaon')
+  assert.equal(normalizeWord('छोटी'), 'choti')
+  assert.equal(normalizeWord('बच्ची'), 'bachi')
 })
 
 test('buildVoiceWords: split hyphenated script words while preserving offsets', () => {
@@ -74,6 +93,14 @@ test('findBestMatch: tolerates common STT variants and inserted words', () => {
   const match = findBestMatch(words, spoken, 0, { lookAhead: 40 })
   assert.ok(match)
   assert.equal(words[match.matchedIndex].w, 'postman')
+})
+
+test('findBestMatch: matches Devanagari Hindi transcript against Roman Hindi script', () => {
+  const words = buildVoiceWords('ek gaon me ek choti bachi thi')
+  const spoken = tokenize('एक गांव में एक छोटी बच्ची थी')
+  const match = findBestMatch(words, spoken, 0, { lookAhead: 20 })
+  assert.ok(match)
+  assert.equal(words[match.matchedIndex].w, 'thi')
 })
 
 test('findBestMatch: exposes repeated-phrase matches for caller-side jump guard', () => {

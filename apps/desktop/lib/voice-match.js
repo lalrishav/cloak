@@ -15,15 +15,92 @@
     window.voiceMatch = mod
   }
 })(typeof globalThis !== 'undefined' ? globalThis : this, function () {
-  const WORD_RE = /[a-z0-9]+(?:'[a-z0-9]+)*/gi
+  const WORD_RE = /[\p{L}\p{M}\p{N}]+(?:['’][\p{L}\p{M}\p{N}]+)*/gu
   const WORD_ALIASES = {
+    bachchi: 'bachi',
+    gaanv: 'gaon',
+    ganv: 'gaon',
+    gav: 'gaon',
+    gaav: 'gaon',
+    chhoti: 'choti',
     dialogue: 'dialog',
     dialogues: 'dialogs',
+    main: 'me',
+    mein: 'me',
+    men: 'me',
     model: 'modal',
     models: 'modals',
     render: 'renderer',
     versus: 'vs'
   }
+  const DEVANAGARI_RE = /[\u0900-\u097F]/
+  const DEVANAGARI_VOWELS = {
+    'अ': 'a',
+    'आ': 'aa',
+    'इ': 'i',
+    'ई': 'i',
+    'उ': 'u',
+    'ऊ': 'u',
+    'ऋ': 'ri',
+    'ए': 'e',
+    'ऐ': 'ai',
+    'ओ': 'o',
+    'औ': 'au'
+  }
+  const DEVANAGARI_CONSONANTS = {
+    'क': 'k',
+    'ख': 'kh',
+    'ग': 'g',
+    'घ': 'gh',
+    'ङ': 'ng',
+    'च': 'ch',
+    'छ': 'chh',
+    'ज': 'j',
+    'झ': 'jh',
+    'ञ': 'ny',
+    'ट': 't',
+    'ठ': 'th',
+    'ड': 'd',
+    'ढ': 'dh',
+    'ण': 'n',
+    'त': 't',
+    'थ': 'th',
+    'द': 'd',
+    'ध': 'dh',
+    'न': 'n',
+    'प': 'p',
+    'फ': 'ph',
+    'ब': 'b',
+    'भ': 'bh',
+    'म': 'm',
+    'य': 'y',
+    'र': 'r',
+    'ल': 'l',
+    'व': 'v',
+    'श': 'sh',
+    'ष': 'sh',
+    'स': 's',
+    'ह': 'h',
+    'ळ': 'l'
+  }
+  const DEVANAGARI_MATRA = {
+    'ा': 'aa',
+    'ि': 'i',
+    'ी': 'i',
+    'ु': 'u',
+    'ू': 'u',
+    'ृ': 'ri',
+    'े': 'e',
+    'ै': 'ai',
+    'ो': 'o',
+    'ौ': 'au'
+  }
+  const DEVANAGARI_SIGNS = {
+    'ं': 'n',
+    'ँ': 'n',
+    'ः': 'h'
+  }
+  const DEVANAGARI_VIRAMA = '्'
   const COMPOUND_WORDS = {
     backend: ['back', 'end'],
     browserwindow: ['browser', 'window'],
@@ -31,8 +108,44 @@
     nodejs: ['node', 'js']
   }
 
+  function hasDevanagari(word) {
+    return DEVANAGARI_RE.test(String(word || ''))
+  }
+
+  function transliterateDevanagari(word) {
+    const chars = Array.from(String(word || ''))
+    let out = ''
+    for (let i = 0; i < chars.length; i++) {
+      const ch = chars[i]
+      const next = chars[i + 1]
+
+      if (DEVANAGARI_VOWELS[ch]) {
+        out += DEVANAGARI_VOWELS[ch]
+        continue
+      }
+
+      if (DEVANAGARI_CONSONANTS[ch]) {
+        out += DEVANAGARI_CONSONANTS[ch]
+        if (next === DEVANAGARI_VIRAMA || DEVANAGARI_MATRA[next]) continue
+        if (i < chars.length - 1) out += 'a'
+        continue
+      }
+
+      if (DEVANAGARI_MATRA[ch]) {
+        out += DEVANAGARI_MATRA[ch]
+        continue
+      }
+
+      if (DEVANAGARI_SIGNS[ch]) {
+        out += DEVANAGARI_SIGNS[ch]
+      }
+    }
+    return out
+  }
+
   function normalizeWord(word) {
-    const normalized = String(word || '').toLowerCase().replace(/'/g, '')
+    const raw = String(word || '').toLowerCase().replace(/['’]/g, '')
+    const normalized = hasDevanagari(raw) ? transliterateDevanagari(raw) : raw
     return WORD_ALIASES[normalized] || normalized
   }
 

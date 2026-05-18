@@ -7,9 +7,13 @@ function hashIp(ip) {
 }
 
 module.exports = async function downloadRoutes(fastify) {
-  // Public download landing page (served from public/download/index.html).
+  // Public homepage and download landing page.
+  fastify.get('/', (request, reply) => {
+    return reply.sendFile('index.html')
+  })
+
   fastify.get('/download', (request, reply) => {
-    return reply.sendFile('download/index.html')
+    return reply.sendFile('index.html')
   })
 
   // Tiny endpoint the landing page fetches to show the current version.

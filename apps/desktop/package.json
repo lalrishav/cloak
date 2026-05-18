@@ -8,9 +8,9 @@
     "dev": "electron . --inspect",
     "test": "node --test test/*.test.js",
     "coverage": "c8 --reporter=text --reporter=html --include='lib/**/*.js' --include='server/index.js' node --test test/*.test.js",
-    "dist": "electron-builder",
-    "dist:mac": "electron-builder --mac",
-    "dist:win": "electron-builder --win"
+    "dist": "electron-builder --config.npmRebuild=false",
+    "dist:mac": "electron-builder --mac --config.npmRebuild=false",
+    "dist:win": "electron-builder --win --config.npmRebuild=false"
   },
   "dependencies": {
     "@cue/shared": "*",
@@ -20,8 +20,9 @@
     "ws": "^8.16.0"
   },
   "devDependencies": {
+    "7zip-bin": "^5.2.0",
     "c8": "^11.0.0",
-    "electron": "^30.0.0",
+    "electron": "30.5.1",
     "electron-builder": "^24.13.3"
   },
   "build": {
@@ -43,14 +44,18 @@
     ],
     "mac": {
       "category": "public.app-category.productivity",
-      "target": ["dmg"],
+      "target": [
+        "dmg"
+      ],
       "hardenedRuntime": true,
       "entitlements": "build/entitlements.mac.plist",
       "entitlementsInherit": "build/entitlements.mac.plist",
       "icon": "assets/icon.png"
     },
     "win": {
-      "target": ["nsis"],
+      "target": [
+        "nsis"
+      ],
       "icon": "assets/icon.png"
     },
     "nsis": {

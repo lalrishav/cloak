@@ -1303,6 +1303,8 @@ function registerIpc() {
     logSessionEvent('voice-state', voiceState)
   })
 
+  ipcMain.on('about:open', () => createInfoWindow())
+
   ipcMain.on('overlay:marker-event', (_evt, evt) => {
     if (!evt) return
     const data = evt.data || {}

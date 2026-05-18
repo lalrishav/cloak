@@ -181,6 +181,100 @@ button, input, select, textarea {
 }
 
 /* ============================================================
+   NAVBAR (in-window File / View / Help)
+   ============================================================ */
+
+.app-navbar {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 6px 12px;
+  margin-bottom: 14px;
+  background: linear-gradient(180deg, var(--surface), #101015);
+  border: 1px solid var(--border);
+  border-radius: var(--r-md);
+  box-shadow: var(--section-shadow);
+  position: relative;
+}
+
+.nav-menu {
+  position: relative;
+}
+
+.nav-btn {
+  background: transparent;
+  color: var(--text);
+  border: 1px solid transparent;
+  border-radius: var(--r-sm);
+  padding: 7px 14px;
+  font-size: 12.5px;
+  font-weight: 500;
+  letter-spacing: 0.02em;
+  cursor: pointer;
+  transition: background var(--t-fast) ease, border-color var(--t-fast) ease, color var(--t-fast) ease;
+}
+.nav-btn:hover, .nav-btn.open {
+  background: var(--surface-hi);
+  border-color: var(--border-hi);
+}
+.nav-btn.open { color: var(--accent); }
+
+.nav-dropdown {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 0;
+  min-width: 240px;
+  background: linear-gradient(180deg, var(--surface-2), var(--surface));
+  border: 1px solid var(--border-hi);
+  border-radius: var(--r-sm);
+  box-shadow: 0 14px 40px rgba(0, 0, 0, 0.5);
+  padding: 4px;
+  z-index: 60;
+  animation: dropdownIn 140ms cubic-bezier(0.2, 0.7, 0.2, 1);
+}
+@keyframes dropdownIn {
+  from { opacity: 0; transform: translateY(-4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.nav-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  padding: 9px 12px;
+  background: transparent;
+  color: var(--text);
+  border: 0;
+  border-radius: 4px;
+  font-size: 12.5px;
+  font-weight: 400;
+  letter-spacing: 0.01em;
+  text-align: left;
+  cursor: pointer;
+  text-transform: none;
+  transition: background var(--t-fast) ease, color var(--t-fast) ease;
+}
+.nav-item:hover { background: var(--accent-dim); color: var(--accent); }
+
+.nav-key {
+  font-family: 'JetBrains Mono', ui-monospace, monospace;
+  font-size: 10.5px;
+  color: var(--muted);
+  margin-left: 18px;
+}
+.nav-item:hover .nav-key { color: var(--accent); }
+
+.nav-spacer { flex: 1; }
+
+.nav-hint {
+  font-size: 11px;
+  color: var(--muted);
+  padding-right: 8px;
+}
+.nav-hint strong { color: var(--text); font-weight: 600; }
+
+/* ============================================================
    GRID
    ============================================================ */
 

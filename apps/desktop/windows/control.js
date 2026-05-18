@@ -1693,18 +1693,61 @@ function wireCapturePanel() {
   }
 }
 
-window.cue.onShowPanel((panel) => {
-  if (!panel) return
-  if (panel === 'new-script') {
-    createNewScript()
+function dispatchPanelAction(action) {
+  if (!action) return
+  if (action === 'new-script') return createNewScript()
+  if (action === 'import-file') return fileInput.click()
+  if (action === 'about') {
+    // 'about' is handled by the main process menu via createInfoWindow.
+    // From the in-window navbar we relay via showPanel('about').
+    if (window.cue && window.cue.openAbout) window.cue.openAbout()
     return
   }
-  if (panel === 'import-file') {
-    fileInput.click()
-    return
-  }
-  showPanelModal(panel)
-})
+  showPanelModal(action)
+}
+
+window.cue.onShowPanel((panel) => dispatchPanelAction(panel))
+
+// ---------- in-window navbar (File / View / Help) ----------
+
+const navbarEl = $('app-navbar')
+
+function closeAllNavDropdowns() {
+  if (!navbarEl) return
+  navbarEl.querySelectorAll('[data-nav-dropdown]').forEach((dd) => { dd.hidden = true })
+  navbarEl.querySelectorAll('[data-nav-toggle]').forEach((btn) => btn.classList.remove('open'))
+}
+
+if (navbarEl) {
+  navbarEl.querySelectorAll('[data-nav-toggle]').forEach((btn) => {
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation()
+      const key = btn.dataset.navToggle
+      const dd = navbarEl.querySelector(`[data-nav-dropdown="${key}"]`)
+      if (!dd) return
+      const opening = dd.hidden
+      closeAllNavDropdowns()
+      if (opening) {
+        dd.hidden = false
+        btn.classList.add('open')
+      }
+    })
+  })
+
+  navbarEl.querySelectorAll('.nav-item').forEach((item) => {
+    item.addEventListener('click', (e) => {
+      e.stopPropagation()
+      closeAllNavDropdowns()
+      const action = item.dataset.action
+      dispatchPanelAction(action)
+    })
+  })
+
+  document.addEventListener('click', () => closeAllNavDropdowns())
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') closeAllNavDropdowns()
+  })
+}
 
 // ---------- bootstrap ----------
 

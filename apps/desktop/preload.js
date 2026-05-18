@@ -160,5 +160,6 @@ contextBridge.exposeInMainWorld('cue', {
 
   // --- menu-driven panel toggles (from app menu) ---
   onShowPanel: (cb) =>
-    ipcRenderer.on('control:show-panel', (_, v) => cb(v))
+    ipcRenderer.on('control:show-panel', (_, v) => cb(v)),
+  openAbout: () => ipcRenderer.send('about:open')
 })

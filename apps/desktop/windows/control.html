@@ -44,6 +44,40 @@
     </div>
   </header>
 
+  <!-- ============================================================
+       NAVBAR — File / View / Help dropdowns (visible in window)
+       ============================================================ -->
+  <nav class="app-navbar" id="app-navbar">
+    <div class="nav-menu" data-menu="file">
+      <button class="nav-btn" data-nav-toggle="file">File ▾</button>
+      <div class="nav-dropdown" data-nav-dropdown="file" hidden>
+        <button class="nav-item" data-action="new-script">New Script <span class="nav-key">⌘N</span></button>
+        <button class="nav-item" data-action="library">Library…<span class="nav-key">⌘L</span></button>
+        <button class="nav-item" data-action="import-file">Import File…<span class="nav-key">⌘O</span></button>
+      </div>
+    </div>
+
+    <div class="nav-menu" data-menu="view">
+      <button class="nav-btn" data-nav-toggle="view">View ▾</button>
+      <div class="nav-dropdown" data-nav-dropdown="view" hidden>
+        <button class="nav-item" data-action="sessions">Sessions<span class="nav-key">⌘⇧S</span></button>
+        <button class="nav-item" data-action="remote">Remote / QR</button>
+        <button class="nav-item" data-action="capture-status">Capture Protection</button>
+        <button class="nav-item" data-action="shortcuts">Keyboard Shortcuts</button>
+      </div>
+    </div>
+
+    <div class="nav-menu" data-menu="help">
+      <button class="nav-btn" data-nav-toggle="help">Help ▾</button>
+      <div class="nav-dropdown" data-nav-dropdown="help" hidden>
+        <button class="nav-item" data-action="about">About Cue / Diagnostics</button>
+      </div>
+    </div>
+
+    <span class="nav-spacer"></span>
+    <span class="nav-hint">Tip: Sessions, Remote (QR), and Capture status live under <strong>View</strong>.</span>
+  </nav>
+
   <div class="app-grid">
 
   <!-- ============================================================

@@ -1,0 +1,176 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <title>About Cue</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #0a0a0d;
+      --surface: #15151a;
+      --surface-2: #1b1b22;
+      --border: #25252d;
+      --accent: #e8ff47;
+      --text: #f0f0f0;
+      --muted: #7a7a85;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Inter', system-ui, -apple-system, sans-serif;
+      font-size: 13px;
+      line-height: 1.5;
+      -webkit-font-smoothing: antialiased;
+      height: 100%;
+    }
+    body {
+      padding: 28px;
+      display: flex;
+      flex-direction: column;
+      gap: 22px;
+    }
+    .brand {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+    .brand-name {
+      font-size: 32px;
+      font-weight: 700;
+      letter-spacing: 0.04em;
+      color: var(--accent);
+    }
+    .brand-tag {
+      font-size: 12px;
+      color: var(--muted);
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+    }
+    .card {
+      background: linear-gradient(180deg, var(--surface-2), var(--surface));
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 18px 20px;
+    }
+    .card-title {
+      font-size: 11px;
+      letter-spacing: 0.18em;
+      color: var(--muted);
+      text-transform: uppercase;
+      margin-bottom: 12px;
+      font-weight: 600;
+    }
+    .row {
+      display: grid;
+      grid-template-columns: 130px 1fr;
+      gap: 12px;
+      padding: 7px 0;
+      font-size: 12.5px;
+      align-items: baseline;
+    }
+    .row + .row { border-top: 1px solid var(--border); }
+    .row .k {
+      color: var(--muted);
+      letter-spacing: 0.06em;
+      font-size: 11px;
+      text-transform: uppercase;
+    }
+    .row .v {
+      color: var(--text);
+      font-family: 'JetBrains Mono', ui-monospace, monospace;
+      font-size: 12px;
+      word-break: break-all;
+    }
+    .row .v.ok { color: var(--accent); }
+    .footer {
+      margin-top: auto;
+      display: flex;
+      gap: 8px;
+      justify-content: flex-end;
+    }
+    button {
+      font-family: inherit;
+      font-size: 12px;
+      font-weight: 500;
+      letter-spacing: 0.04em;
+      padding: 8px 16px;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      background: var(--surface);
+      color: var(--text);
+      cursor: pointer;
+      transition: all 140ms ease;
+    }
+    button:hover { border-color: var(--accent); color: var(--accent); }
+    button.primary {
+      background: var(--accent);
+      border-color: var(--accent);
+      color: var(--bg);
+      font-weight: 600;
+    }
+    button.primary:hover {
+      background: transparent;
+      color: var(--accent);
+    }
+  </style>
+</head>
+<body>
+  <div class="brand">
+    <div class="brand-name">CUE</div>
+    <div class="brand-tag">Capture-aware teleprompter</div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Diagnostics</div>
+    <div class="row"><span class="k">Install ID</span><span class="v" id="install-id">—</span></div>
+    <div class="row"><span class="k">App Version</span><span class="v" id="app-version">—</span></div>
+    <div class="row"><span class="k">API</span><span class="v" id="api-status">—</span></div>
+    <div class="row"><span class="k">API URL</span><span class="v" id="api-url">—</span></div>
+    <div class="row"><span class="k">Version Policy</span><span class="v" id="policy-status">—</span></div>
+    <div class="row"><span class="k">Platform</span><span class="v" id="platform-info">—</span></div>
+  </div>
+
+  <div class="footer">
+    <button class="primary" id="close-btn">Close</button>
+  </div>
+
+  <script>
+    async function load() {
+      try {
+        const d = await window.cue.getDiagnostics()
+        const plat = await window.cue.getPlatform()
+        const setText = (id, txt) => {
+          const el = document.getElementById(id)
+          if (el) el.textContent = txt
+        }
+        setText('install-id', (d && d.installId) || '—')
+        setText('app-version', (d && d.appVersion) || '—')
+        setText('api-url', (d && d.apiUrl) || '—')
+        if (d && d.boot) {
+          setText('api-status', d.boot.offline ? 'offline (using cache)' : 'connected')
+          const policy = d.boot.killSwitch
+            ? 'blocked'
+            : d.boot.updateRequired
+              ? 'update required'
+              : d.boot.cachedStatus && d.boot.cachedStatus !== 'allowed'
+                ? d.boot.cachedStatus + ' (cached)'
+                : d.boot.status || 'allowed'
+          setText('policy-status', policy)
+        }
+        if (plat) {
+          const platMap = { darwin: 'macOS', win32: 'Windows', linux: 'Linux' }
+          const platName = platMap[plat.platform] || plat.platform
+          setText('platform-info', platName + ' ' + (plat.osRelease || '') + ' · ' + plat.arch)
+        }
+      } catch (err) {
+        /* best effort */
+      }
+    }
+    document.getElementById('close-btn').addEventListener('click', () => window.close())
+    load()
+  </script>
+</body>
+</html>

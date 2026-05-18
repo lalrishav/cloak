@@ -1,4 +1,4 @@
-const { app, BrowserWindow, ipcMain, globalShortcut, screen, dialog, shell } = require('electron')
+const { app, BrowserWindow, Menu, ipcMain, globalShortcut, screen, dialog, shell } = require('electron')
 const fs = require('fs')
 const path = require('path')
 const crypto = require('crypto')
@@ -345,6 +345,156 @@ function applyOverlayVisibility(force) {
     overlayWin.hide()
   }
   return next
+}
+
+let infoWin = null
+
+function createInfoWindow() {
+  if (infoWin && !infoWin.isDestroyed()) {
+    infoWin.focus()
+    return
+  }
+  infoWin = new BrowserWindow({
+    width: 520,
+    height: 540,
+    title: 'About Cue',
+    resizable: false,
+    minimizable: false,
+    maximizable: false,
+    backgroundColor: '#0d0d0f',
+    parent: controlWin || undefined,
+    modal: false,
+    webPreferences: {
+      preload: path.join(__dirname, 'preload.js'),
+      contextIsolation: true,
+      nodeIntegration: false,
+      sandbox: false
+    }
+  })
+  infoWin.setMenuBarVisibility(false)
+  infoWin.loadFile(path.join(__dirname, 'windows', 'info.html'))
+  infoWin.on('closed', () => { infoWin = null })
+}
+
+function showControlPanel(panel) {
+  sendToControl('control:show-panel', panel)
+}
+
+function buildAppMenu() {
+  const isMac = process.platform === 'darwin'
+  const template = []
+
+  if (isMac) {
+    template.push({
+      label: app.name,
+      submenu: [
+        { label: 'About Cue', click: () => createInfoWindow() },
+        { type: 'separator' },
+        { role: 'services' },
+        { type: 'separator' },
+        { role: 'hide' },
+        { role: 'hideOthers' },
+        { role: 'unhide' },
+        { type: 'separator' },
+        { role: 'quit' }
+      ]
+    })
+  }
+
+  template.push({
+    label: 'File',
+    submenu: [
+      {
+        label: 'New Script',
+        accelerator: 'CmdOrCtrl+N',
+        click: () => showControlPanel('new-script')
+      },
+      {
+        label: 'Library…',
+        accelerator: 'CmdOrCtrl+L',
+        click: () => showControlPanel('library')
+      },
+      {
+        label: 'Import File…',
+        accelerator: 'CmdOrCtrl+O',
+        click: () => showControlPanel('import-file')
+      },
+      { type: 'separator' },
+      isMac ? { role: 'close' } : { role: 'quit' }
+    ]
+  })
+
+  template.push({
+    label: 'Edit',
+    submenu: [
+      { role: 'undo' },
+      { role: 'redo' },
+      { type: 'separator' },
+      { role: 'cut' },
+      { role: 'copy' },
+      { role: 'paste' },
+      { role: 'selectAll' }
+    ]
+  })
+
+  template.push({
+    label: 'View',
+    submenu: [
+      {
+        label: 'Sessions',
+        accelerator: 'CmdOrCtrl+Shift+S',
+        click: () => showControlPanel('sessions')
+      },
+      {
+        label: 'Capture Protection Status',
+        click: () => showControlPanel('capture-status')
+      },
+      {
+        label: 'Remote / QR',
+        click: () => showControlPanel('remote')
+      },
+      {
+        label: 'Keyboard Shortcuts',
+        click: () => showControlPanel('shortcuts')
+      },
+      { type: 'separator' },
+      { role: 'reload' },
+      { role: 'forceReload' },
+      { role: 'toggleDevTools' },
+      { type: 'separator' },
+      { role: 'togglefullscreen' }
+    ]
+  })
+
+  template.push({
+    label: 'Window',
+    role: 'window',
+    submenu: [
+      { role: 'minimize' },
+      { role: 'zoom' },
+      ...(isMac
+        ? [
+            { type: 'separator' },
+            { role: 'front' },
+            { type: 'separator' },
+            { role: 'window' }
+          ]
+        : [{ role: 'close' }])
+    ]
+  })
+
+  template.push({
+    label: 'Help',
+    role: 'help',
+    submenu: [
+      {
+        label: 'About Cue / Diagnostics',
+        click: () => createInfoWindow()
+      }
+    ]
+  })
+
+  Menu.setApplicationMenu(Menu.buildFromTemplate(template))
 }
 
 function createControlWindow() {
@@ -1156,6 +1306,17 @@ function registerIpc() {
   ipcMain.on('overlay:marker-event', (_evt, evt) => {
     if (!evt) return
     const data = evt.data || {}
+    // Overlay reports its own playback state changes when cues fire / end of script
+    if (evt.channel === 'playback-state') {
+      const playing = !!(data && data.playing)
+      if (remoteState.playing !== playing) {
+        remoteState.playing = playing
+        sendToControl('control:toggle-echo', playing)
+        broadcastRemoteState()
+        logSessionEvent(playing ? 'play' : 'pause', { source: 'overlay' })
+      }
+      return
+    }
     sendToControl('overlay:marker-event', evt)
     logSessionEvent('cue-hit', {
       cueType: data.type,
@@ -1507,6 +1668,7 @@ app.whenReady().then(async () => {
   eventQueue.start()
 
   await Promise.all([startRemoteServer(), connectDb()])
+  buildAppMenu()
   createOverlayWindow()
   createControlWindow()
   registerShortcuts()

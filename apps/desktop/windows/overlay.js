@@ -33,6 +33,13 @@ let speed = 3
 let smartPace = true
 let smartPaceZones = []
 let smartPaceFactor = 1
+let lastReportedRunning = false
+
+function reportPlaybackState() {
+  if (running === lastReportedRunning) return
+  lastReportedRunning = running
+  notifyMain('playback-state', { playing: running })
+}
 let voiceFollowActive = false
 let voiceOwnedPlayback = false
 let voiceTargetY = 0
@@ -587,6 +594,7 @@ function fireMarker(m) {
     case 'pause': {
       const dur = m.payload && m.payload.durationMs
       running = false
+      reportPlaybackState()
       if (dur && dur > 0) {
         showStatusBadge('pause-timed', `PAUSE ${(dur / 1000).toFixed(1)}s`, '⏸')
         clearResumeTimer()
@@ -604,6 +612,7 @@ function fireMarker(m) {
     case 'stop': {
       running = false
       stopped = true
+      reportPlaybackState()
       showStatusBadge('stop', 'STOP', '■')
       notifyMain('marker-hit', { id: m.id, type: m.type, payload: m.payload })
       return
@@ -618,6 +627,7 @@ function fireMarker(m) {
     case 'breath': {
       // brief pause for natural breath
       running = false
+      reportPlaybackState()
       showStatusBadge('pause-timed', 'BREATH', '~')
       clearResumeTimer()
       resumeTimer = setTimeout(() => {
@@ -693,6 +703,7 @@ function tick() {
   if (scrollY >= max) {
     scrollY = max
     running = false
+    reportPlaybackState()
     endMarker.classList.add('show')
   }
 
@@ -710,6 +721,7 @@ function start() {
     return
   }
   running = true
+  reportPlaybackState()
   endMarker.classList.remove('show')
   hideStatusBadge()
   if (rafId == null) {
@@ -719,6 +731,7 @@ function start() {
 
 function pause() {
   running = false
+  reportPlaybackState()
   clearResumeTimer()
 }
 

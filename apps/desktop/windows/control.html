@@ -5,95 +5,351 @@
   <title>Cue — Teleprompter</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="control.css" />
-  <style>
-    .diagnostics { margin-top: 10px; font-size: 11px; opacity: 0.7; }
-    .diag-row { display: flex; justify-content: space-between; gap: 12px; padding: 2px 0; }
-    .diag-row > span:last-child { opacity: 0.95; text-align: right; word-break: break-all; }
-    .consent-modal {
-      position: fixed; inset: 0; z-index: 1000;
-      display: flex; align-items: center; justify-content: center;
-      background: rgba(0, 0, 0, 0.62);
-    }
-    .consent-modal[hidden] { display: none; }
-    .consent-card {
-      max-width: 380px; padding: 24px;
-      background: #16161a; border: 1px solid #2f2f38; border-radius: 12px;
-    }
-    .consent-card h3 { margin: 0 0 8px; }
-    .consent-card p { margin: 0 0 18px; font-size: 12.5px; line-height: 1.55; opacity: 0.82; }
-    .consent-actions { display: flex; gap: 8px; justify-content: flex-end; }
-  </style>
 </head>
 <body>
   <div class="app-shell">
 
+  <!-- ============================================================
+       TOP TOOLBAR — brand, mode toggle, theme, mirror, focus/overlay/fs
+       ============================================================ -->
   <header class="app-topbar">
     <div class="brand-block">
       <span class="brand-name">CUE</span>
       <span class="brand-tag">Capture-aware teleprompter</span>
     </div>
+
+    <div class="top-segment" role="tablist" aria-label="Tele mode">
+      <button class="seg-btn active" id="mode-normal" role="tab" aria-selected="true" title="Normal teleprompter — uses speed slider">Normal</button>
+      <button class="seg-btn" id="mode-voice" role="tab" aria-selected="false" title="Voice-paced — Deepgram listens and scrolls with your speech">Voice</button>
+    </div>
+
+    <div class="top-segment" aria-label="Theme">
+      <button class="seg-btn active" id="theme-dark" title="Dark theme">Dark</button>
+      <button class="seg-btn" id="theme-light" title="Light theme">Light</button>
+    </div>
+
+    <div class="top-segment" aria-label="Mirror">
+      <button class="seg-btn active" id="mirror-none" title="No mirror">None</button>
+      <button class="seg-btn" id="mirror-h" title="Horizontal mirror">⇄ H</button>
+      <button class="seg-btn" id="mirror-v" title="Vertical mirror">⇅ V</button>
+      <button class="seg-btn" id="mirror-both" title="Both mirrors">⇄⇅</button>
+    </div>
+
     <div class="topbar-cluster">
-      <span id="db-status" class="topbar-chip"><span class="dot"></span><span id="db-text">mongo…</span></span>
-      <button id="focus-btn" class="topbar-chip" title="Focus mode — hide rails (script only)">◧ FOCUS</button>
-      <button id="overlay-toggle" class="topbar-chip" title="Show/hide overlay (⌘/Ctrl+Shift+O)">👁 OVERLAY OFF</button>
-      <button id="fs-btn" class="topbar-chip" title="Toggle fullscreen (F11)">⛶ FULL</button>
+      <button id="focus-btn" class="topbar-chip" title="Focus mode — hide rails (script only)">◧ Focus</button>
+      <button id="overlay-toggle" class="topbar-chip" title="Show/hide overlay (⌘/Ctrl+Shift+O)">👁 Overlay</button>
+      <button id="fs-btn" class="topbar-chip" title="Toggle fullscreen (F11)">⛶ Full</button>
     </div>
   </header>
 
   <div class="app-grid">
 
-  <div class="col-left">
+  <!-- ============================================================
+       LEFT — Script editor
+       ============================================================ -->
+  <div class="col-center">
 
-  <section data-section="library">
-    <div class="section-head" data-toggle="library">
-      <div class="section-head-left">
-        <span>LIBRARY</span>
-        <span id="lib-summary" class="section-summary"></span>
+    <section data-section="script">
+      <div class="section-label">
+        <span>Script</span>
+        <span id="char-count" class="char-count">0 chars</span>
       </div>
-      <span id="lib-count" class="char-count">0 scripts</span>
-      <span class="section-chevron">▾</span>
+      <div class="title-row">
+        <input id="title" type="text" placeholder="Untitled" />
+        <span id="save-state" class="save-state">—</span>
+      </div>
+
+      <div class="cue-toolbar">
+        <button id="cue-insert-pause" title="Insert [[pause]]">＋ Pause</button>
+        <button id="cue-insert-pause-timed" title="Insert [[pause 3s]]">＋ Pause 3s</button>
+        <button id="cue-insert-stop" title="Insert [[stop]]">＋ Stop</button>
+        <button id="cue-insert-breath" title="Insert [[breath]]">＋ Breath</button>
+        <div class="group">
+          <select id="cue-reaction-kind" title="Reaction kind">
+            <option value="smile">😊 smile</option>
+            <option value="laugh">😄 laugh</option>
+            <option value="nod">👍 nod</option>
+            <option value="wave">👋 wave</option>
+            <option value="point">👉 point</option>
+            <option value="wink">😉 wink</option>
+            <option value="shrug">🤷 shrug</option>
+            <option value="clap">👏 clap</option>
+            <option value="cry">😢 cry</option>
+          </select>
+          <button id="cue-insert-react" title="Insert [[react …]]">＋ React</button>
+        </div>
+        <button id="cue-insert-chapter" title="Insert [[chapter: …]]">＋ Chapter</button>
+        <button id="cue-insert-note" title="Insert [[note: …]]">＋ Note</button>
+        <button id="cue-format-ai" class="ai" title="Reformat with GPT — keeps every word, only adds breaks/timed pauses/cues">✨ Format with AI</button>
+      </div>
+
+      <textarea id="script" placeholder="Paste your script here. Use cue marks like [[pause 3s]] or [[chapter: Intro]] for hands-free pacing."></textarea>
+    </section>
+
+  </div><!-- /col-center -->
+
+  <!-- ============================================================
+       RIGHT — Reference, Console, Settings, Overlay position
+       ============================================================ -->
+  <div class="col-right">
+
+    <!-- REFERENCE TRAY (moved to top of right column) -->
+    <section data-section="references">
+      <div class="section-head" data-toggle="references">
+        <div class="section-head-left">
+          <span>Reference Tray</span>
+        </div>
+        <span id="reference-count" class="char-count">0 files</span>
+        <span class="section-chevron">▾</span>
+      </div>
+      <div class="section-body">
+        <div id="image-preview" class="image-preview empty">
+          <span class="image-empty-text">No reference images. Add one or more images to keep them available during the prompt.</span>
+          <img id="image-thumb" alt="" />
+        </div>
+        <div class="reference-actions">
+          <button id="load-image">▤ Add Images</button>
+          <button id="reference-prev">← Prev</button>
+          <button id="reference-next">Next →</button>
+          <button id="reference-focus">Focus</button>
+          <button id="clear-image">Clear</button>
+          <input type="file" id="image-input" accept="image/*" multiple style="display:none" />
+        </div>
+        <div id="reference-list" class="reference-list"></div>
+      </div>
+    </section>
+
+    <!-- CONSOLE — playback -->
+    <section class="console" data-section="console">
+      <div class="section-head" data-toggle="console">
+        <div class="section-head-left">
+          <span>Console</span>
+        </div>
+        <span class="section-chevron">▾</span>
+      </div>
+      <div class="section-body">
+
+        <div class="lcd">
+          <div class="lcd-row">
+            <div class="lcd-item">
+              <span class="lcd-label">SPD</span>
+              <span class="lcd-value" id="lcd-speed">3</span>
+            </div>
+            <div class="lcd-divider"></div>
+            <div class="lcd-item">
+              <span class="lcd-label">FNT</span>
+              <span class="lcd-value" id="lcd-font">32</span>
+            </div>
+            <div class="lcd-divider"></div>
+            <div class="lcd-item">
+              <span class="lcd-label">OPC</span>
+              <span class="lcd-value" id="lcd-opacity">80</span>
+            </div>
+          </div>
+          <div class="lcd-foot">
+            <span class="lcd-flag" id="lcd-mode"><span class="pip"></span>Mode</span>
+            <span class="lcd-flag" id="lcd-playing"><span class="pip"></span>Play</span>
+            <span class="lcd-flag" id="lcd-overlay"><span class="pip"></span>Overlay</span>
+          </div>
+        </div>
+
+        <div class="console-primary">
+          <button id="btn-play" class="play-disc" aria-label="Play / Pause">
+            <span class="play-icon" id="play-icon">▶</span>
+          </button>
+          <span class="play-meta" id="play-meta">Paused</span>
+        </div>
+
+        <div class="cue-pad cue-pad-3">
+          <button id="btn-slow" class="pad-btn">
+            <span class="pad-ic">−</span>
+            <span>Slow</span>
+          </button>
+          <button id="btn-fast" class="pad-btn">
+            <span class="pad-ic">+</span>
+            <span>Fast</span>
+          </button>
+          <button id="btn-countdown" class="pad-btn">
+            <span class="pad-ic">⏱</span>
+            <span>Count</span>
+          </button>
+        </div>
+
+        <div class="cue-pad cue-pad-2">
+          <button id="btn-stumble" class="pad-btn warn">
+            <span class="pad-ic">⚑</span>
+            <span>Stumble</span>
+          </button>
+          <button id="btn-reset" class="pad-btn">
+            <span class="pad-ic">↺</span>
+            <span>Reset</span>
+          </button>
+        </div>
+
+        <div class="console-aux">
+          <select id="chapter-select">
+            <option value="">— jump to chapter —</option>
+          </select>
+        </div>
+
+        <div class="countdown-row">
+          <label for="countdown">Countdown</label>
+          <input type="range" id="countdown" min="1" max="10" step="1" value="3" />
+          <span id="countdown-val" class="value">3s</span>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- SETTINGS -->
+    <section data-section="settings">
+      <div class="section-head" data-toggle="settings">
+        <div class="section-head-left">
+          <span>Settings</span>
+        </div>
+        <span class="section-chevron">▾</span>
+      </div>
+      <div class="section-body">
+        <div class="slider-row">
+          <label for="speed">Speed</label>
+          <input type="range" id="speed" min="1" max="10" step="1" value="3" />
+          <span id="speed-val" class="value">3</span>
+        </div>
+        <div class="slider-row">
+          <label for="font">Font size</label>
+          <input type="range" id="font" min="16" max="96" step="1" value="32" />
+          <span id="font-val" class="value">32px</span>
+        </div>
+        <div class="slider-row">
+          <label for="opacity">Opacity</label>
+          <input type="range" id="opacity" min="10" max="100" step="1" value="80" />
+          <span id="opacity-val" class="value">80%</span>
+        </div>
+        <div class="check-row">
+          <label for="analytics-consent" title="Anonymous usage data — no script content, no personal info">Share anonymous usage data</label>
+          <label class="switch">
+            <input type="checkbox" id="analytics-consent" />
+            <span class="slider"></span>
+          </label>
+        </div>
+      </div>
+    </section>
+
+    <!-- OVERLAY POSITION -->
+    <section data-section="overlay">
+      <div class="section-head" data-toggle="overlay">
+        <div class="section-head-left">
+          <span>Overlay position</span>
+        </div>
+        <span class="section-chevron">▾</span>
+      </div>
+      <div class="section-body">
+        <div class="pos-grid">
+          <label>X<input type="number" id="pos-x" value="100" /></label>
+          <label>Y<input type="number" id="pos-y" value="60" /></label>
+          <label>Width<input type="number" id="pos-w" value="960" min="200" /></label>
+          <label>Height<input type="number" id="pos-h" value="332" min="80" /></label>
+        </div>
+        <div class="row-actions">
+          <button id="apply-pos" class="full primary">Apply Position</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- VOICE TRANSCRIPT (shown only in voice mode) -->
+    <section class="voice-section" data-section="voice" id="voice-section" hidden>
+      <div class="section-head" data-toggle="voice">
+        <div class="section-head-left">
+          <span>Voice Transcript <span class="badge-beta">Beta</span></span>
+        </div>
+        <span id="voice-status" class="char-count">off</span>
+        <span class="section-chevron">▾</span>
+      </div>
+      <div class="section-body">
+        <div class="desc">Mic captures your speech via Deepgram. The app matches returned words against the script and scrolls the overlay accordingly.</div>
+        <div class="voice-row">
+          <button id="voice-toggle" class="primary">🎙 Start Listening</button>
+          <button id="voice-clear">Clear</button>
+        </div>
+        <div id="voice-transcript" class="voice-transcript">—</div>
+      </div>
+    </section>
+
+  </div><!-- /col-right -->
+
+  </div><!-- /app-grid -->
+
+  <input type="file" id="file-input" accept=".txt,.md" style="display:none" />
+
+  </div><!-- /app-shell -->
+
+  <!-- ============================================================
+       MODAL — generic panel container shown by menu items
+       ============================================================ -->
+  <div id="panel-modal" class="panel-modal" hidden>
+    <div class="panel-card">
+      <div class="panel-head">
+        <span class="panel-title" id="panel-title">Panel</span>
+        <button id="panel-close" class="panel-close" aria-label="Close">✕</button>
+      </div>
+      <div class="panel-body" id="panel-body">
+        <!-- contents injected by control.js -->
+      </div>
     </div>
-    <div class="section-body">
+  </div>
+
+  <!-- Templates for modal contents -->
+  <div id="panel-templates" style="display:none">
+    <!-- Library -->
+    <div data-panel="library">
       <div id="lib-list" class="lib-list">
         <div class="lib-empty">No scripts yet. Click NEW to create one.</div>
       </div>
       <div class="lib-toolbar">
-        <button id="lib-new" class="primary">＋ NEW</button>
-        <button id="lib-load-file">▤ IMPORT FILE</button>
-        <input type="file" id="file-input" accept=".txt,.md" style="display:none" />
+        <button id="lib-new" class="primary">＋ New</button>
+        <button id="lib-load-file">▤ Import File</button>
+        <button id="lib-snapshot" title="Save a snapshot of the current script">⎘ Snapshot</button>
+        <button id="lib-versions" title="Show version history">History</button>
       </div>
-      <div class="small-note" id="lib-note">Connecting to mongodb://127.0.0.1:27017/cue …</div>
+      <div class="small-note" id="lib-note">Scripts are stored in your local MongoDB at 127.0.0.1:27017/cue.</div>
     </div>
-  </section>
 
-  <section data-section="sessions">
-    <div class="section-head" data-toggle="sessions">
-      <div class="section-head-left">
-        <span>SESSIONS</span>
-        <span id="sessions-summary" class="section-summary"></span>
-      </div>
-      <span id="session-count" class="char-count">—</span>
-      <span class="section-chevron">▾</span>
-    </div>
-    <div class="section-body">
+    <!-- Sessions -->
+    <div data-panel="sessions">
       <div id="session-list" class="session-list">
         <div class="cue-empty">No sessions yet.</div>
       </div>
-      <div class="small-note">Each play opens a session. Stumble bookmarks, cue hits, and resets are recorded — review under HIST after a few runs.</div>
-    </div>
-  </section>
-
-  <section data-section="remote">
-    <div class="section-head" data-toggle="remote">
-      <div class="section-head-left">
-        <span>REMOTE</span>
+      <div class="small-note">Each play opens a session. Stumble bookmarks and cue hits are recorded for review.</div>
+      <div class="status-summary-row">
+        <span class="char-count" id="session-count">—</span>
       </div>
-      <span id="remote-status" class="char-count">starting…</span>
-      <span class="section-chevron">▾</span>
     </div>
-    <div class="section-body">
+
+    <!-- Capture Status -->
+    <div data-panel="capture-status">
+      <div class="status">
+        <div class="line"><span class="key">Platform</span><span class="val" id="platform-val">…</span></div>
+        <div class="line"><span class="key">Architecture</span><span class="val" id="arch-val">…</span></div>
+        <div class="line"><span class="key">Capture Protection</span><span class="val"><code>win.setContentProtection(true)</code> <span class="ok">✓ active</span></span></div>
+
+        <div class="heading">Expected behavior</div>
+        <div class="row-item"><span class="key">Windows 10 2004+</span><span class="val"><span class="ok">✓</span> Invisible to OBS, Zoom, Teams, Meet</span></div>
+        <div class="row-item"><span class="key">macOS (legacy path)</span><span class="val"><span class="ok">✓</span> Hidden from most recorders</span></div>
+        <div class="row-item"><span class="key">macOS (SCK apps)</span><span class="val"><span class="warn">⚠</span> May be visible in apps using ScreenCaptureKit (Zoom v5.16+, OBS v30+, macOS Screenshot)</span></div>
+        <div class="row-item"><span class="key">Hardware capture</span><span class="val"><span class="err">✗</span> Always visible (physics)</span></div>
+        <div class="row-item"><span class="key">Phone camera</span><span class="val"><span class="err">✗</span> Always visible (physics)</span></div>
+
+        <div class="rec">Recommendation: Test with your specific recording setup before relying on invisibility.</div>
+      </div>
+      <div class="row-actions">
+        <button id="capture-test" class="full">Recorder Preview Mode — Help</button>
+      </div>
+    </div>
+
+    <!-- Remote -->
+    <div data-panel="remote">
       <div class="remote-pair">
         <div id="qr-frame" class="qr-frame empty">
           <span class="qr-placeholder">QR</span>
@@ -103,51 +359,16 @@
           <div class="remote-help">Scan with your phone's camera (same WiFi). The remote includes cue jumps, reactions, and stumble bookmarks.</div>
           <div class="remote-url-row">
             <div id="remote-url" class="remote-url">—</div>
-            <button id="remote-copy" class="remote-copy">COPY</button>
+            <button id="remote-copy" class="remote-copy">Copy</button>
           </div>
           <div id="remote-status-line" class="remote-status-line"><span class="dot"></span><span id="remote-status-text">starting server…</span></div>
         </div>
       </div>
+      <div class="small-note">Status: <span id="remote-status">starting…</span></div>
     </div>
-  </section>
 
-  <section data-section="status">
-    <div class="section-head" data-toggle="status">
-      <div class="section-head-left">
-        <span>PLATFORM CAPTURE STATUS</span>
-        <span id="status-summary" class="section-summary"></span>
-      </div>
-      <span class="section-chevron">▾</span>
-    </div>
-    <div class="section-body">
-      <div class="status" id="status">
-        <div class="line"><span class="key">Platform:</span><span class="val" id="platform-val">…</span></div>
-        <div class="line"><span class="key">Architecture:</span><span class="val" id="arch-val">…</span></div>
-        <div class="line"><span class="key">Capture Protection:</span><span class="val"><code>win.setContentProtection(true)</code> <span class="ok">✓ active</span></span></div>
-
-        <div class="heading">EXPECTED BEHAVIOR</div>
-        <div class="row-item"><span class="key">Windows 10 2004+</span><span class="val"><span class="ok">✓</span> Invisible to OBS, Zoom, Teams, Meet</span></div>
-        <div class="row-item"><span class="key">macOS (legacy path)</span><span class="val"><span class="ok">✓</span> Hidden from most recorders</span></div>
-        <div class="row-item"><span class="key">macOS (SCK apps)</span><span class="val"><span class="warn">⚠</span> May be visible in apps using ScreenCaptureKit (Zoom v5.16+, OBS v30+, macOS Screenshot)</span></div>
-        <div class="row-item"><span class="key">Hardware capture</span><span class="val"><span class="err">✗</span> Always visible (physics)</span></div>
-        <div class="row-item"><span class="key">Phone camera</span><span class="val"><span class="err">✗</span> Always visible (physics)</span></div>
-
-        <div class="rec">Recommendation: Test with your specific recording setup before relying on invisibility.</div>
-      </div>
-      <div class="file-button-row">
-        <button id="capture-test" class="full">RECORDER PREVIEW MODE — HELP</button>
-      </div>
-    </div>
-  </section>
-
-  <section data-section="shortcuts">
-    <div class="section-head" data-toggle="shortcuts">
-      <div class="section-head-left">
-        <span>KEYBOARD SHORTCUTS</span>
-      </div>
-      <span class="section-chevron">▾</span>
-    </div>
-    <div class="section-body">
+    <!-- Keyboard shortcuts -->
+    <div data-panel="shortcuts">
       <div class="shortcuts">
         <span class="sc-key">⌘/Ctrl+Shift+Space</span><span class="sc-desc">Play / Pause</span>
         <span class="sc-key">⌘/Ctrl+Shift+R</span><span class="sc-desc">Reset to top</span>
@@ -164,305 +385,11 @@
         <span class="sc-key">F11</span><span class="sc-desc">Toggle fullscreen</span>
       </div>
     </div>
-  </section>
-
-  </div><!-- /col-left -->
-
-  <div class="col-center">
-
-  <section data-section="script">
-    <div class="section-label">
-      <span>SCRIPT</span>
-      <span id="char-count" class="char-count">0 chars</span>
-    </div>
-    <div class="title-row">
-      <input id="title" type="text" placeholder="Untitled" />
-      <span id="save-state" class="save-state">—</span>
-    </div>
-
-    <div class="cue-toolbar">
-      <button id="cue-insert-pause" title="Insert [[pause]]">＋ PAUSE</button>
-      <button id="cue-insert-pause-timed" title="Insert [[pause 3s]]">＋ PAUSE 3s</button>
-      <button id="cue-insert-stop" title="Insert [[stop]]">＋ STOP</button>
-      <button id="cue-insert-breath" title="Insert [[breath]]">＋ BREATH</button>
-      <div class="group">
-        <select id="cue-reaction-kind" title="Reaction kind">
-          <option value="smile">😊 smile</option>
-          <option value="laugh">😄 laugh</option>
-          <option value="nod">👍 nod</option>
-          <option value="wave">👋 wave</option>
-          <option value="point">👉 point</option>
-          <option value="wink">😉 wink</option>
-          <option value="shrug">🤷 shrug</option>
-          <option value="clap">👏 clap</option>
-          <option value="cry">😢 cry</option>
-        </select>
-        <button id="cue-insert-react" title="Insert [[react …]]">＋ REACT</button>
-      </div>
-      <button id="cue-insert-chapter" title="Insert [[chapter: …]]">＋ CHAPTER</button>
-      <button id="cue-insert-note" title="Insert [[note: …]]">＋ NOTE</button>
-      <button id="cue-format-ai" class="ai" title="Reformat with GPT — keeps every word, only adds breaks/timed pauses/cues">✨ FORMAT WITH AI</button>
-    </div>
-
-    <textarea id="script" placeholder="Paste your script here. Use cue marks like [[pause 3s]] or [[chapter: Intro]] for hands-free pacing."></textarea>
-  </section>
-
-  <section data-section="cues">
-    <div class="section-head" data-toggle="cues">
-      <div class="section-head-left">
-        <span>CUES</span>
-      </div>
-      <span id="cue-count" class="char-count">0 cues</span>
-      <span class="section-chevron">▾</span>
-    </div>
-    <div class="section-body">
-      <div id="cue-list" class="cue-list">
-        <div class="cue-empty">No cues. Insert one with the toolbar above.</div>
-      </div>
-      <div class="cue-stats">
-        <div class="cue-stat"><div class="n" id="stat-pause">0</div><div class="l">PAUSE</div></div>
-        <div class="cue-stat"><div class="n" id="stat-stop">0</div><div class="l">STOP</div></div>
-        <div class="cue-stat"><div class="n" id="stat-react">0</div><div class="l">REACT</div></div>
-        <div class="cue-stat"><div class="n" id="stat-chapter">0</div><div class="l">CHAPT</div></div>
-        <div class="cue-stat"><div class="n" id="stat-note">0</div><div class="l">NOTE</div></div>
-      </div>
-    </div>
-  </section>
-
-  </div><!-- /col-center -->
-
-  <div class="col-right">
-
-  <!-- ============= CONSOLE (remote-style playback) ============= -->
-  <section class="console" data-section="console">
-    <div class="section-head" data-toggle="console">
-      <div class="section-head-left">
-        <span>CONSOLE</span>
-      </div>
-      <span class="section-chevron">▾</span>
-    </div>
-    <div class="section-body">
-
-      <!-- LCD strip -->
-      <div class="lcd">
-        <div class="lcd-row">
-          <div class="lcd-item">
-            <span class="lcd-label">SPD</span>
-            <span class="lcd-value" id="lcd-speed">3</span>
-          </div>
-          <div class="lcd-divider"></div>
-          <div class="lcd-item">
-            <span class="lcd-label">FNT</span>
-            <span class="lcd-value" id="lcd-font">32</span>
-          </div>
-          <div class="lcd-divider"></div>
-          <div class="lcd-item">
-            <span class="lcd-label">OPC</span>
-            <span class="lcd-value" id="lcd-opacity">80</span>
-          </div>
-        </div>
-        <div class="lcd-foot">
-          <span class="lcd-flag" id="lcd-smart"><span class="pip"></span>SMART</span>
-          <span class="lcd-flag" id="lcd-playing"><span class="pip"></span>PLAY</span>
-          <span class="lcd-flag" id="lcd-overlay"><span class="pip"></span>OVERLAY</span>
-        </div>
-      </div>
-
-      <!-- Big play disc -->
-      <div class="console-primary">
-        <button id="btn-play" class="play-disc" aria-label="Play / Pause">
-          <span class="play-icon" id="play-icon">▶</span>
-        </button>
-        <span class="play-meta" id="play-meta">PAUSED</span>
-      </div>
-
-      <!-- Cue pad: PREV/NEXT/SLOW/FAST -->
-      <div class="cue-pad">
-        <button id="btn-jump-prev" class="pad-btn">
-          <span class="pad-ic">◀</span>
-          <span>PREV CUE</span>
-        </button>
-        <button id="btn-jump-next" class="pad-btn">
-          <span class="pad-ic">▶</span>
-          <span>NEXT CUE</span>
-        </button>
-        <button id="btn-slow" class="pad-btn">
-          <span class="pad-ic">−</span>
-          <span>SLOW</span>
-        </button>
-        <button id="btn-fast" class="pad-btn">
-          <span class="pad-ic">+</span>
-          <span>FAST</span>
-        </button>
-      </div>
-
-      <!-- Secondary pad: STUMBLE / RESET / COUNTDOWN -->
-      <div class="cue-pad" style="margin-top: 8px; grid-template-columns: 1fr 1fr 1fr;">
-        <button id="btn-stumble" class="pad-btn warn">
-          <span class="pad-ic">⚑</span>
-          <span>STUMBLE</span>
-        </button>
-        <button id="btn-reset" class="pad-btn">
-          <span class="pad-ic">↺</span>
-          <span>RESET</span>
-        </button>
-        <button id="btn-countdown" class="pad-btn">
-          <span class="pad-ic">⏱</span>
-          <span>COUNT</span>
-        </button>
-      </div>
-
-      <!-- Chapter jump + snap/hist -->
-      <div class="console-aux">
-        <select id="chapter-select">
-          <option value="">— jump to chapter —</option>
-        </select>
-        <button id="btn-jump-chapter">JUMP</button>
-        <button id="btn-snapshot" title="Save a version snapshot">⎘ SNAP</button>
-        <button id="btn-versions" title="Show version history">HIST</button>
-      </div>
-
-      <!-- Countdown slider -->
-      <div class="countdown-row">
-        <label for="countdown">COUNTDOWN</label>
-        <input type="range" id="countdown" min="1" max="10" step="1" value="3" />
-        <span id="countdown-val" class="value">3s</span>
-      </div>
-
-    </div>
-  </section>
-
-  <!-- ============= SETTINGS ============= -->
-  <section data-section="settings">
-    <div class="section-head" data-toggle="settings">
-      <div class="section-head-left">
-        <span>SETTINGS</span>
-      </div>
-      <span class="section-chevron">▾</span>
-    </div>
-    <div class="section-body">
-      <div class="slider-row">
-        <label for="speed">SPEED</label>
-        <input type="range" id="speed" min="1" max="10" step="1" value="3" />
-        <span id="speed-val" class="value">3</span>
-      </div>
-      <div class="slider-row">
-        <label for="font">FONT SIZE</label>
-        <input type="range" id="font" min="16" max="96" step="1" value="32" />
-        <span id="font-val" class="value">32px</span>
-      </div>
-      <div class="slider-row">
-        <label for="opacity">OPACITY</label>
-        <input type="range" id="opacity" min="10" max="100" step="1" value="80" />
-        <span id="opacity-val" class="value">80%</span>
-      </div>
-      <div class="check-row">
-        <label for="smart-pace">SMART PACE</label>
-        <input type="checkbox" id="smart-pace" checked />
-      </div>
-      <div class="theme-row">
-        <label>THEME</label>
-        <div class="pills">
-          <button id="theme-dark" class="pill active">☾ DARK</button>
-          <button id="theme-light" class="pill">☀ LIGHT</button>
-        </div>
-      </div>
-      <div class="theme-row">
-        <label>MIRROR</label>
-        <div class="pills">
-          <button id="mirror-none" class="pill active">NONE</button>
-          <button id="mirror-h" class="pill">⇄ H</button>
-          <button id="mirror-v" class="pill">⇅ V</button>
-          <button id="mirror-both" class="pill">⇄⇅ BOTH</button>
-        </div>
-      </div>
-      <div class="check-row">
-        <label for="analytics-consent" title="Anonymous usage data — no script content, no personal info">SHARE ANONYMOUS USAGE DATA</label>
-        <input type="checkbox" id="analytics-consent" />
-      </div>
-      <div id="diagnostics" class="diagnostics">
-        <div class="diag-row"><span>INSTALL ID</span><span id="diag-install">—</span></div>
-        <div class="diag-row"><span>APP VERSION</span><span id="diag-version">—</span></div>
-        <div class="diag-row"><span>API</span><span id="diag-api">—</span></div>
-        <div class="diag-row"><span>VERSION POLICY</span><span id="diag-policy">—</span></div>
-      </div>
-    </div>
-  </section>
-
-  <!-- ============= VOICE PACING ============= -->
-  <section class="voice-section" data-section="voice">
-    <div class="section-head" data-toggle="voice">
-      <div class="section-head-left">
-        <span>VOICE PACING <span style="color:var(--pause-color)">BETA</span></span>
-      </div>
-      <span id="voice-status" class="char-count">off</span>
-      <span class="section-chevron">▾</span>
-    </div>
-    <div class="section-body">
-      <div class="desc">Mic captures your speech and streams it to Deepgram Speech-to-Text. The app matches returned words against the script so the overlay can keep pace with what you actually said.</div>
-      <div class="voice-row">
-        <button id="voice-toggle" class="primary">🎙 START VOICE</button>
-        <button id="voice-clear">CLEAR</button>
-      </div>
-      <div id="voice-transcript" class="voice-transcript">—</div>
-    </div>
-  </section>
-
-  <!-- ============= REFERENCE TRAY ============= -->
-  <section data-section="references">
-    <div class="section-head" data-toggle="references">
-      <div class="section-head-left">
-        <span>REFERENCE TRAY</span>
-      </div>
-      <span id="reference-count" class="char-count">0 files</span>
-      <span class="section-chevron">▾</span>
-    </div>
-    <div class="section-body">
-      <div id="image-preview" class="image-preview empty">
-        <span class="image-empty-text">No reference images yet. Add one or more images to keep them available during the prompt.</span>
-        <img id="image-thumb" alt="" />
-      </div>
-      <div class="file-button-row">
-        <button id="load-image">▤ ADD IMAGES</button>
-        <button id="reference-prev">← PREV</button>
-        <button id="reference-next">NEXT →</button>
-        <button id="reference-focus">FOCUS</button>
-        <button id="clear-image">CLEAR</button>
-        <input type="file" id="image-input" accept="image/*" multiple style="display:none" />
-      </div>
-      <div id="reference-list" class="reference-list"></div>
-    </div>
-  </section>
-
-  <!-- ============= OVERLAY POSITION ============= -->
-  <section data-section="overlay">
-    <div class="section-head" data-toggle="overlay">
-      <div class="section-head-left">
-        <span>OVERLAY POSITION</span>
-      </div>
-      <span class="section-chevron">▾</span>
-    </div>
-    <div class="section-body">
-      <div class="pos-grid">
-        <label>X<input type="number" id="pos-x" value="100" /></label>
-        <label>Y<input type="number" id="pos-y" value="60" /></label>
-        <label>WIDTH<input type="number" id="pos-w" value="960" min="200" /></label>
-        <label>HEIGHT<input type="number" id="pos-h" value="332" min="80" /></label>
-      </div>
-      <div class="file-button-row">
-        <button id="apply-pos" class="full primary">APPLY POSITION</button>
-      </div>
-    </div>
-  </section>
-
-  </div><!-- /col-right -->
-
-  </div><!-- /app-grid -->
-  </div><!-- /app-shell -->
+  </div>
 
   <!-- first-launch analytics consent -->
-  <div id="consent-modal" class="consent-modal" hidden>
-    <div class="consent-card">
+  <div id="consent-modal" class="panel-modal" hidden>
+    <div class="panel-card consent-card">
       <h3>Help improve Cue</h3>
       <p>Share anonymous usage data — which features you use, your app version, and crash counts. No script content, no transcripts, no personal info ever leaves your machine. You can change this anytime in Settings.</p>
       <div class="consent-actions">

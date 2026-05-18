@@ -7,34 +7,14 @@ const titleEl = $('title')
 const charCountEl = $('char-count')
 const saveStateEl = $('save-state')
 
-const dbStatusEl = $('db-status')
-const dbTextEl = $('db-text')
-const libList = $('lib-list')
-const libCount = $('lib-count')
-const libNoteEl = $('lib-note')
-const libNewBtn = $('lib-new')
-const libLoadFileBtn = $('lib-load-file')
 const fileInput = $('file-input')
-
-const cueListEl = $('cue-list')
-const cueCountEl = $('cue-count')
-const statPause = $('stat-pause')
-const statStop = $('stat-stop')
-const statReact = $('stat-react')
-const statChapter = $('stat-chapter')
-const statNote = $('stat-note')
 
 const btnPlay = $('btn-play')
 const btnReset = $('btn-reset')
 const btnSlow = $('btn-slow')
 const btnFast = $('btn-fast')
-const btnJumpPrev = $('btn-jump-prev')
-const btnJumpNext = $('btn-jump-next')
 const btnCountdown = $('btn-countdown')
 const btnStumble = $('btn-stumble')
-const btnJumpChapter = $('btn-jump-chapter')
-const btnSnapshot = $('btn-snapshot')
-const btnVersions = $('btn-versions')
 
 const chapterSelect = $('chapter-select')
 
@@ -44,7 +24,6 @@ const fontEl = $('font')
 const fontVal = $('font-val')
 const opacityEl = $('opacity')
 const opacityVal = $('opacity-val')
-const smartPaceEl = $('smart-pace')
 const countdownInput = $('countdown')
 const countdownValEl = $('countdown-val')
 
@@ -53,10 +32,6 @@ const posY = $('pos-y')
 const posW = $('pos-w')
 const posH = $('pos-h')
 const applyPosBtn = $('apply-pos')
-
-const platformVal = $('platform-val')
-const archVal = $('arch-val')
-const captureTestBtn = $('capture-test')
 
 const imagePreview = $('image-preview')
 const imageThumb = $('image-thumb')
@@ -69,14 +44,6 @@ const referencePrevBtn = $('reference-prev')
 const referenceNextBtn = $('reference-next')
 const referenceFocusBtn = $('reference-focus')
 
-const qrFrame = $('qr-frame')
-const qrImage = $('qr-image')
-const remoteUrlEl = $('remote-url')
-const remoteCopyBtn = $('remote-copy')
-const remoteStatusEl = $('remote-status')
-const remoteStatusLine = $('remote-status-line')
-const remoteStatusText = $('remote-status-text')
-
 const themeDarkBtn = $('theme-dark')
 const themeLightBtn = $('theme-light')
 const mirrorNoneBtn = $('mirror-none')
@@ -84,29 +51,34 @@ const mirrorHBtn = $('mirror-h')
 const mirrorVBtn = $('mirror-v')
 const mirrorBothBtn = $('mirror-both')
 
+const modeNormalBtn = $('mode-normal')
+const modeVoiceBtn = $('mode-voice')
+
+const voiceSectionEl = $('voice-section')
 const voiceToggleBtn = $('voice-toggle')
 const voiceClearBtn = $('voice-clear')
 const voiceStatusEl = $('voice-status')
 const voiceTranscriptEl = $('voice-transcript')
 
-const sessionList = $('session-list')
-const sessionCount = $('session-count')
-
-// new chrome: console LCD, play disc icon, focus toggle, section summaries
+// LCD elements + focus button
 const playIcon = $('play-icon')
 const playMeta = $('play-meta')
 const lcdSpeed = $('lcd-speed')
 const lcdFont = $('lcd-font')
 const lcdOpacity = $('lcd-opacity')
-const lcdSmart = $('lcd-smart')
+const lcdMode = $('lcd-mode')
 const lcdPlaying = $('lcd-playing')
 const lcdOverlay = $('lcd-overlay')
 const focusBtn = $('focus-btn')
-const libSummaryEl = $('lib-summary')
-const sessionsSummaryEl = $('sessions-summary')
-const statusSummaryEl = $('status-summary')
 
-const STORAGE_KEY = 'cue.state.v2'
+// Modal panel
+const panelModal = $('panel-modal')
+const panelTitle = $('panel-title')
+const panelBody = $('panel-body')
+const panelCloseBtn = $('panel-close')
+const panelTemplatesEl = $('panel-templates')
+
+const STORAGE_KEY = 'cue.state.v3'
 const DEFAULT_OVERLAY_H = 460
 
 const state = {
@@ -114,7 +86,7 @@ const state = {
   speed: 3,
   font: 32,
   opacity: 80,
-  smartPace: true,
+  smartPace: true, // always on now
   posX: 100,
   posY: 60,
   posW: 960,
@@ -128,6 +100,7 @@ const state = {
   referenceFocus: false,
   theme: 'dark',
   mirror: 'none',
+  mode: 'normal', // 'normal' | 'voice'
   countdown: 3,
   activeScriptId: null,
   activeTitle: 'Untitled',
@@ -151,6 +124,7 @@ function loadState() {
     const saved = JSON.parse(raw)
     Object.assign(state, saved)
     state.playing = false
+    state.smartPace = true // always on, ignore any persisted false
     if (state.overlayHeightVersion !== 3 && state.posH <= 360) {
       state.posH = DEFAULT_OVERLAY_H
       state.overlayHeightVersion = 3
@@ -177,6 +151,14 @@ function clamp(n, min, max) {
   return Math.min(max, Math.max(min, n))
 }
 
+function escapeHtml(s) {
+  return String(s)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+}
+
 function updateCharCount() {
   const len = scriptEl.value.length
   charCountEl.textContent = `${len.toLocaleString()} chars`
@@ -185,15 +167,33 @@ function updateCharCount() {
 function setPlayLabel() {
   if (playIcon) playIcon.textContent = state.playing ? '⏸' : '▶'
   if (btnPlay) btnPlay.classList.toggle('is-playing', !!state.playing)
-  if (playMeta) playMeta.textContent = state.playing ? 'PLAYING' : 'PAUSED'
+  if (playMeta) playMeta.textContent = state.playing ? 'Playing' : 'Paused'
   updateLcd()
+}
+
+function paintRangeFill(el) {
+  if (!el) return
+  const min = Number(el.min) || 0
+  const max = Number(el.max) || 100
+  const val = Number(el.value) || 0
+  const pct = ((val - min) / Math.max(1, max - min)) * 100
+  el.style.setProperty('--range-pct', `${pct}%`)
 }
 
 function updateLcd() {
   if (lcdSpeed) lcdSpeed.textContent = String(state.speed)
   if (lcdFont) lcdFont.textContent = String(state.font)
   if (lcdOpacity) lcdOpacity.textContent = String(state.opacity)
-  if (lcdSmart) lcdSmart.classList.toggle('on', state.smartPace !== false)
+  if (lcdMode) {
+    lcdMode.classList.toggle('on', state.mode === 'voice')
+    const label = lcdMode.lastChild
+    if (label && label.nodeType === Node.TEXT_NODE) {
+      label.textContent = state.mode === 'voice' ? 'Voice' : 'Normal'
+    } else {
+      // structure is `<span class="pip"></span>Mode` — replace trailing text
+      lcdMode.innerHTML = `<span class="pip"></span>${state.mode === 'voice' ? 'Voice' : 'Normal'}`
+    }
+  }
   if (lcdPlaying) lcdPlaying.classList.toggle('on', !!state.playing)
 }
 
@@ -203,7 +203,7 @@ function applyFocusMode() {
 }
 
 function initCollapsibles() {
-  const defaults = { sessions: true, status: true }
+  const defaults = {}
   if (!state.collapsed || typeof state.collapsed !== 'object') state.collapsed = {}
   document.querySelectorAll('[data-toggle]').forEach((head) => {
     const key = head.dataset.toggle
@@ -223,6 +223,7 @@ function initCollapsibles() {
 }
 
 function pulse(el) {
+  if (!el) return
   el.classList.remove('echo-pulse')
   void el.offsetWidth
   el.classList.add('echo-pulse')
@@ -240,7 +241,7 @@ function renderReferenceTray() {
   const active = getActiveReference()
   const count = state.references.length
   referenceCountEl.textContent = `${count} file${count === 1 ? '' : 's'}`
-  referenceFocusBtn.textContent = state.referenceFocus ? 'MINIMIZE' : 'FOCUS'
+  referenceFocusBtn.textContent = state.referenceFocus ? 'Minimize' : 'Focus'
   referenceFocusBtn.disabled = count === 0
   referencePrevBtn.disabled = count <= 1
   referenceNextBtn.disabled = count <= 1
@@ -265,7 +266,7 @@ function renderReferenceTray() {
     const label = document.createElement('span')
     label.textContent = `${idx + 1}. ${ref.name || 'Reference image'}`
     const btn = document.createElement('button')
-    btn.textContent = ref.id === state.activeReferenceId ? 'ACTIVE' : 'USE'
+    btn.textContent = ref.id === state.activeReferenceId ? 'Active' : 'Use'
     btn.disabled = ref.id === state.activeReferenceId
     btn.addEventListener('click', () => {
       state.activeReferenceId = ref.id
@@ -289,6 +290,8 @@ function sendReferences() {
 function renderThemePills() {
   themeDarkBtn.classList.toggle('active', state.theme !== 'light')
   themeLightBtn.classList.toggle('active', state.theme === 'light')
+  themeDarkBtn.setAttribute('aria-selected', state.theme !== 'light')
+  themeLightBtn.setAttribute('aria-selected', state.theme === 'light')
 }
 
 function renderMirrorPills() {
@@ -298,52 +301,52 @@ function renderMirrorPills() {
   mirrorBothBtn.classList.toggle('active', state.mirror === 'both')
 }
 
+function renderModePills() {
+  const isVoice = state.mode === 'voice'
+  modeNormalBtn.classList.toggle('active', !isVoice)
+  modeVoiceBtn.classList.toggle('active', isVoice)
+  modeNormalBtn.setAttribute('aria-selected', String(!isVoice))
+  modeVoiceBtn.setAttribute('aria-selected', String(isVoice))
+  if (voiceSectionEl) voiceSectionEl.hidden = !isVoice
+  updateLcd()
+}
+
 function renderSaveState(kind) {
   saveStateEl.classList.remove('saved', 'dirty', 'err')
   if (kind === 'saved') {
-    saveStateEl.textContent = 'SAVED'
+    saveStateEl.textContent = 'Saved'
     saveStateEl.classList.add('saved')
   } else if (kind === 'dirty') {
-    saveStateEl.textContent = 'SAVING…'
+    saveStateEl.textContent = 'Saving…'
     saveStateEl.classList.add('dirty')
   } else if (kind === 'err') {
-    saveStateEl.textContent = 'LOCAL ONLY'
+    saveStateEl.textContent = 'Local only'
     saveStateEl.classList.add('err')
   } else {
     saveStateEl.textContent = '—'
   }
 }
 
-function renderDbStatus() {
-  dbStatusEl.classList.remove('connected', 'error')
-  if (dbStatus.connected) {
-    dbStatusEl.classList.add('connected')
-    dbTextEl.textContent = 'MONGO'
-    libNoteEl.textContent = 'Connected. Edits autosave to your local mongo at 127.0.0.1:27017/cue.'
-  } else if (dbStatus.error) {
-    dbStatusEl.classList.add('error')
-    dbTextEl.textContent = 'NO MONGO'
-    libNoteEl.textContent = `MongoDB unavailable: ${dbStatus.error}. Working in local-only mode — start mongod and restart Cue to enable the library.`
-  } else {
-    dbTextEl.textContent = 'CONNECTING…'
-    libNoteEl.textContent = 'Connecting to mongodb://127.0.0.1:27017/cue …'
-  }
-  libNewBtn.disabled = !dbStatus.connected
-  libNewBtn.style.opacity = dbStatus.connected ? '1' : '0.5'
-}
-
 function renderLib() {
+  const libList = $('lib-list')
+  const libCount = $('lib-count')
+  const libNewBtn = $('lib-new')
+  if (!libList) return
   libList.innerHTML = ''
-  libCount.textContent = `${scripts.length} script${scripts.length === 1 ? '' : 's'}`
+  if (libCount) libCount.textContent = `${scripts.length} script${scripts.length === 1 ? '' : 's'}`
   if (!scripts.length) {
     const e = document.createElement('div')
     e.className = 'lib-empty'
     e.textContent = dbStatus.connected
       ? 'No scripts yet. Click NEW to create one.'
-      : 'No mongo — open or import a script to work locally.'
+      : 'No MongoDB — open or import a script to work locally.'
     libList.appendChild(e)
+    if (libNewBtn) {
+      libNewBtn.disabled = !dbStatus.connected
+    }
     return
   }
+  if (libNewBtn) libNewBtn.disabled = !dbStatus.connected
   for (const s of scripts) {
     const row = document.createElement('div')
     row.className = 'lib-item' + (s.id === state.activeScriptId ? ' active' : '')
@@ -358,6 +361,7 @@ function renderLib() {
     row.addEventListener('click', (e) => {
       if (e.target.classList && e.target.classList.contains('del')) return
       openScript(s.id)
+      hidePanelModal()
     })
     row.querySelector('.del').addEventListener('click', async (e) => {
       e.stopPropagation()
@@ -377,84 +381,14 @@ function renderLib() {
   }
 }
 
-function escapeHtml(s) {
-  return String(s)
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;')
+function reparse() {
+  parsed = window.scriptParse.parse(scriptEl.value || '')
+  refreshVoiceWords()
+  populateChapterSelect()
 }
 
-function renderCueList() {
-  cueListEl.innerHTML = ''
-  const markers = parsed.markers || []
-  cueCountEl.textContent = `${markers.length} cue${markers.length === 1 ? '' : 's'}`
-
-  const stats = { pause: 0, stop: 0, react: 0, chapter: 0, note: 0, breath: 0, unknown: 0 }
-  for (const m of markers) stats[m.type] = (stats[m.type] || 0) + 1
-  statPause.textContent = String(stats.pause + stats.breath)
-  statStop.textContent = String(stats.stop)
-  statReact.textContent = String(stats.react)
-  statChapter.textContent = String(stats.chapter)
-  statNote.textContent = String(stats.note)
-
-  // index warnings by markerId
-  const warningsForMarker = new Map()
-  for (const w of parsed.warnings || []) {
-    if (w.markerId) warningsForMarker.set(w.markerId, w.message)
-  }
-
-  // banner: surface the most common pitfall ([[stop]] mid-script) up front
-  if (warningsForMarker.size) {
-    const banner = document.createElement('div')
-    banner.className = 'cue-warning-banner'
-    const first = parsed.warnings[0]
-    banner.innerHTML = `<span class="ic">⚠</span><span>${escapeHtml(first.message)} (${warningsForMarker.size} cue${warningsForMarker.size === 1 ? '' : 's'})</span>`
-    cueListEl.appendChild(banner)
-  }
-
-  if (!markers.length) {
-    const e = document.createElement('div')
-    e.className = 'cue-empty'
-    e.textContent = 'No cues. Insert one with the toolbar above.'
-    cueListEl.appendChild(e)
-  } else {
-    let idx = 0
-    for (const m of markers) {
-      idx++
-      const row = document.createElement('div')
-      row.className = 'cue-row'
-      if ((parsed.errors || []).some((er) => er.raw && er.raw.includes(`[[${m.payload.reaction || ''}`))) {
-        row.classList.add('error')
-      }
-      const warn = warningsForMarker.get(m.id)
-      if (warn) row.classList.add('warn')
-      const lineNo = countLines(parsed.plainText.slice(0, m.charOffset))
-      const label = describeMarker(m)
-      const titleAttr = warn ? `line ${lineNo} — ${warn}` : `line ${lineNo}`
-      row.innerHTML = `
-        <span class="badge ${m.type}">${badgeLabel(m.type)}</span>
-        <span class="label" title="${escapeHtml(titleAttr)}">${escapeHtml(label)}${warn ? ' <span class="warn-icon">⚠</span>' : ''}</span>
-        <button class="jump" title="Scroll overlay to this cue">JUMP</button>
-      `
-      row.querySelector('.jump').addEventListener('click', () => {
-        // Use cue:next/prev semantics by selecting this marker by id —
-        // we approximate by repeatedly stepping next from current position.
-        // Simpler: tell main to jump to chapter id (works for chapters), else fall back to position-based jump.
-        if (m.type === 'chapter') {
-          window.cue.jumpToChapter(m.id)
-        } else {
-          // Sequential next-jumps starting from top. Better UX: send a generic jump-to-marker.
-          window.cue.jumpToChapter(m.id) // overlay searches chapters first, falls through silently for non-chapters
-          // also try positional jump via a generic event
-          ipcSendJumpToMarker(m.id)
-        }
-      })
-      cueListEl.appendChild(row)
-    }
-  }
-
-  // populate chapter select
+function populateChapterSelect() {
+  if (!chapterSelect) return
   const prev = chapterSelect.value
   chapterSelect.innerHTML = '<option value="">— jump to chapter —</option>'
   for (const ch of parsed.chapters || []) {
@@ -466,41 +400,6 @@ function renderCueList() {
   chapterSelect.value = prev
 }
 
-// position-based jump fallback — not exposed via preload, so we relay via cue:jump with marker id
-function ipcSendJumpToMarker(id) {
-  // overlay's jumpToChapter does id-lookup against chapters[] only;
-  // for non-chapter markers we ask overlay to advance to next cue iteratively
-  // by emitting a series of jump-next until landing on this id. This is rare
-  // and a small UX nit — for now do nothing extra.
-}
-
-function badgeLabel(type) {
-  switch (type) {
-    case 'pause': return 'PSE'
-    case 'stop': return 'STP'
-    case 'react': return 'RCT'
-    case 'chapter': return 'CHP'
-    case 'note': return 'NTE'
-    case 'breath': return 'BRH'
-    default: return '?'
-  }
-}
-
-function describeMarker(m) {
-  return window.scriptParse.describeMarker(m)
-}
-
-function countLines(text) {
-  if (!text) return 1
-  return text.split('\n').length
-}
-
-function reparse() {
-  parsed = window.scriptParse.parse(scriptEl.value || '')
-  refreshVoiceWords()
-  renderCueList()
-}
-
 function applyAll() {
   isApplying = true
   scriptEl.value = state.script
@@ -508,7 +407,6 @@ function applyAll() {
   speedEl.value = state.speed
   fontEl.value = state.font
   opacityEl.value = state.opacity
-  smartPaceEl.checked = state.smartPace !== false
   countdownInput.value = state.countdown
   posX.value = state.posX
   posY.value = state.posY
@@ -519,17 +417,22 @@ function applyAll() {
   fontVal.textContent = `${state.font}px`
   opacityVal.textContent = `${state.opacity}%`
   countdownValEl.textContent = `${state.countdown}s`
+  paintRangeFill(speedEl)
+  paintRangeFill(fontEl)
+  paintRangeFill(opacityEl)
+  paintRangeFill(countdownInput)
   updateCharCount()
   setPlayLabel()
   renderReferenceTray()
   renderThemePills()
   renderMirrorPills()
+  renderModePills()
 
   window.cue.updateScript(state.script)
   window.cue.setSpeed(state.speed)
   window.cue.setFontSize(state.font)
   window.cue.setOpacity(state.opacity / 100)
-  window.cue.setSmartPace(state.smartPace !== false)
+  window.cue.setSmartPace(true) // always on
   sendReferences()
   window.cue.setTheme(state.theme)
   window.cue.setMirror(state.mirror)
@@ -542,19 +445,20 @@ function applyAll() {
 // ---------- LIBRARY / DB ----------
 
 async function refreshLib() {
-  if (!dbStatus.connected) return
+  if (!dbStatus.connected) {
+    renderLib()
+    return
+  }
   try {
     scripts = await window.cue.scriptsList()
-    renderLib()
-  } catch (err) {
+  } catch {
     scripts = []
-    renderLib()
   }
+  renderLib()
 }
 
 async function ensureActiveScript() {
   if (!dbStatus.connected) return
-  // open the previously-active script if still present
   if (state.activeScriptId) {
     const found = scripts.find((s) => s.id === state.activeScriptId)
     if (found) {
@@ -565,7 +469,6 @@ async function ensureActiveScript() {
   if (scripts.length) {
     await openScript(scripts[0].id)
   } else {
-    // create initial
     try {
       const fresh = await window.cue.scriptsCreate({
         title: 'Untitled',
@@ -592,7 +495,6 @@ async function openScript(id) {
       if (typeof s.speed === 'number') state.speed = s.speed
       if (typeof s.font === 'number') state.font = s.font
       if (typeof s.opacity === 'number') state.opacity = s.opacity
-      if (typeof s.smartPace === 'boolean') state.smartPace = s.smartPace
       if (typeof s.theme === 'string') state.theme = s.theme
       if (typeof s.mirror === 'string') state.mirror = s.mirror
     }
@@ -601,16 +503,11 @@ async function openScript(id) {
     renderLib()
     renderSaveState('saved')
     window.cue.dbStatus().then(() => {})
-    // tell main this is the active script (for session attribution)
-    try { ipcRendererSendActive(state.activeScriptId) } catch {}
+    try { window.cue.setActiveScript(state.activeScriptId) } catch {}
     refreshSessions()
   } catch (err) {
     renderSaveState('err')
   }
-}
-
-function ipcRendererSendActive(id) {
-  window.cue.setActiveScript(id)
 }
 
 function scheduleSave() {
@@ -626,13 +523,12 @@ function scheduleSave() {
           speed: state.speed,
           font: state.font,
           opacity: state.opacity,
-          smartPace: state.smartPace,
+          smartPace: true,
           theme: state.theme,
           mirror: state.mirror
         }
       })
       renderSaveState('saved')
-      // refresh ordering without full reload
       const idx = scripts.findIndex((s) => s.id === state.activeScriptId)
       if (idx > -1) {
         scripts[idx].title = state.activeTitle
@@ -707,15 +603,14 @@ $('cue-insert-note').addEventListener('click', () => {
 const btnFormatAi = $('cue-format-ai')
 let aiFormatting = false
 let aiHasKey = false
-const aiOriginalLabel = btnFormatAi ? btnFormatAi.textContent : '✨ FORMAT WITH AI'
+const aiOriginalLabel = btnFormatAi ? btnFormatAi.textContent : '✨ Format with AI'
 
 function setAiButtonState(kind, label) {
   if (!btnFormatAi) return
   btnFormatAi.classList.remove('busy', 'err')
   if (kind === 'busy') btnFormatAi.classList.add('busy')
   if (kind === 'err') btnFormatAi.classList.add('err')
-  if (label) btnFormatAi.textContent = label
-  else btnFormatAi.textContent = aiOriginalLabel
+  btnFormatAi.textContent = label || aiOriginalLabel
 }
 
 function flashAiButton(kind, label, ms) {
@@ -752,23 +647,20 @@ if (btnFormatAi) {
     }
     const text = scriptEl.value
     if (!text || !text.trim()) {
-      flashAiButton('err', '✕ EMPTY', 1200)
+      flashAiButton('err', '✕ Empty', 1200)
       return
     }
 
     aiFormatting = true
     btnFormatAi.disabled = true
-    setAiButtonState('busy', 'FORMATTING…')
+    setAiButtonState('busy', 'Formatting…')
 
-    // snapshot current text into version history so the user can restore via HIST
     if (dbStatus.connected && state.activeScriptId) {
       try { await window.cue.scriptsSnapshot(state.activeScriptId) } catch { /* ignore */ }
     }
 
     try {
-      console.log('[ai-fmt] sending text length:', text.length)
       const res = await window.cue.formatScriptWithAi(text)
-      console.log('[ai-fmt] result:', res)
       if (res && res.ok && typeof res.text === 'string') {
         scriptEl.value = res.text
         state.script = res.text
@@ -777,61 +669,73 @@ if (btnFormatAi) {
         reparse()
         saveState()
         scheduleSave()
-        flashAiButton(null, '✓ DONE', 1200)
+        flashAiButton(null, '✓ Done', 1200)
       } else {
         const msg = (res && res.error) || 'no result returned'
         const diag = res && res.diag ? '\n\nDiagnostic:\n' + JSON.stringify(res.diag, null, 2) : ''
-        flashAiButton('err', '✕ FAILED', 2000)
-        alert('AI format failed:\n\n' + msg + diag + '\n\nSee terminal (where you ran npm start) for full logs.')
+        flashAiButton('err', '✕ Failed', 2000)
+        alert('AI format failed:\n\n' + msg + diag)
       }
     } catch (err) {
-      console.error('[ai-fmt] threw:', err)
-      flashAiButton('err', '✕ FAILED', 2000)
-      alert('AI format failed (renderer threw):\n\n' + (err && err.message ? err.message : String(err)) + '\n\nSee DevTools console for stack.')
+      flashAiButton('err', '✕ Failed', 2000)
+      alert('AI format failed:\n\n' + (err && err.message ? err.message : String(err)))
     } finally {
       aiFormatting = false
-      btnFormatAi.disabled = !aiHasKey ? true : false
+      btnFormatAi.disabled = !aiHasKey
     }
   })
 }
 
-// ---------- file import ----------
+// ---------- file import (triggered via menu) ----------
 
-libLoadFileBtn.addEventListener('click', () => fileInput.click())
-fileInput.addEventListener('change', (e) => {
-  const file = e.target.files && e.target.files[0]
-  if (!file) return
-  const reader = new FileReader()
-  reader.onload = async () => {
-    const text = String(reader.result || '')
-    if (dbStatus.connected) {
-      try {
-        const created = await window.cue.scriptsCreate({
-          title: file.name.replace(/\.(txt|md)$/i, ''),
-          body: text
-        })
-        await refreshLib()
-        await openScript(created.id)
-      } catch (err) {
-        alert('Import failed: ' + (err && err.message))
+if (fileInput) {
+  fileInput.addEventListener('change', (e) => {
+    const file = e.target.files && e.target.files[0]
+    if (!file) return
+    const reader = new FileReader()
+    reader.onload = async () => {
+      const text = String(reader.result || '')
+      if (dbStatus.connected) {
+        try {
+          const created = await window.cue.scriptsCreate({
+            title: file.name.replace(/\.(txt|md)$/i, ''),
+            body: text
+          })
+          await refreshLib()
+          await openScript(created.id)
+        } catch (err) {
+          alert('Import failed: ' + (err && err.message))
+        }
+      } else {
+        scriptEl.value = text
+        state.script = text
+        state.activeTitle = file.name.replace(/\.(txt|md)$/i, '')
+        titleEl.value = state.activeTitle
+        updateCharCount()
+        window.cue.updateScript(text)
+        reparse()
+        saveState()
       }
-    } else {
-      scriptEl.value = text
-      state.script = text
-      state.activeTitle = file.name.replace(/\.(txt|md)$/i, '')
-      titleEl.value = state.activeTitle
-      updateCharCount()
-      window.cue.updateScript(text)
-      reparse()
-      saveState()
     }
-  }
-  reader.readAsText(file)
-  fileInput.value = ''
-})
+    reader.readAsText(file)
+    fileInput.value = ''
+  })
+}
 
-libNewBtn.addEventListener('click', async () => {
-  if (!dbStatus.connected) return
+async function createNewScript() {
+  if (!dbStatus.connected) {
+    state.script = ''
+    state.activeTitle = 'Untitled'
+    scriptEl.value = ''
+    titleEl.value = state.activeTitle
+    updateCharCount()
+    window.cue.updateScript('')
+    reparse()
+    saveState()
+    titleEl.focus()
+    titleEl.select()
+    return
+  }
   try {
     const created = await window.cue.scriptsCreate({
       title: 'Untitled',
@@ -844,7 +748,7 @@ libNewBtn.addEventListener('click', async () => {
   } catch (err) {
     alert('Create failed: ' + (err && err.message))
   }
-})
+}
 
 // ---------- playback ----------
 
@@ -864,7 +768,9 @@ function nudgeSpeed(delta) {
   state.speed = clamp(state.speed + delta, 1, 10)
   speedEl.value = state.speed
   speedVal.textContent = String(state.speed)
+  paintRangeFill(speedEl)
   window.cue.setSpeed(state.speed)
+  updateLcd()
   saveState()
   scheduleSave()
   pulse(speedEl)
@@ -872,9 +778,6 @@ function nudgeSpeed(delta) {
 
 btnSlow.addEventListener('click', () => nudgeSpeed(-1))
 btnFast.addEventListener('click', () => nudgeSpeed(1))
-
-btnJumpPrev.addEventListener('click', () => window.cue.jumpToPrevCue())
-btnJumpNext.addEventListener('click', () => window.cue.jumpToNextCue())
 
 btnCountdown.addEventListener('click', () => {
   window.cue.startCountdown(state.countdown)
@@ -885,48 +788,14 @@ btnCountdown.addEventListener('click', () => {
 btnStumble.addEventListener('click', () => {
   window.cue.bookmarkStumble()
   pulse(btnStumble)
-  // refresh session list after a beat
   setTimeout(refreshSessions, 300)
 })
 
-btnJumpChapter.addEventListener('click', () => {
+// Chapter select: jump immediately on change (no separate JUMP button)
+chapterSelect.addEventListener('change', () => {
   const v = chapterSelect.value
   if (!v) return
   window.cue.jumpToChapter(v)
-})
-
-btnSnapshot.addEventListener('click', async () => {
-  if (!dbStatus.connected || !state.activeScriptId) return
-  try {
-    await window.cue.scriptsSnapshot(state.activeScriptId)
-    const orig = btnSnapshot.textContent
-    btnSnapshot.textContent = '✓ SAVED'
-    setTimeout(() => { btnSnapshot.textContent = orig }, 1200)
-  } catch (err) {
-    alert('Snapshot failed: ' + (err && err.message))
-  }
-})
-
-btnVersions.addEventListener('click', async () => {
-  if (!dbStatus.connected || !state.activeScriptId) return
-  try {
-    const v = await window.cue.scriptsVersions(state.activeScriptId)
-    if (!v.length) {
-      alert('No version snapshots yet.')
-      return
-    }
-    const choices = v
-      .map((x, i) => `${i + 1}. ${new Date(x.savedAt).toLocaleString()}`)
-      .join('\n')
-    const ans = prompt(`Versions:\n${choices}\n\nEnter number to restore (cancel to keep current):`)
-    const idx = parseInt(ans, 10)
-    if (!isFinite(idx) || idx < 1 || idx > v.length) return
-    if (!confirm(`Restore version from ${new Date(v[idx - 1].savedAt).toLocaleString()}? Current text will be replaced.`)) return
-    await window.cue.scriptsRestore(state.activeScriptId, v[idx - 1].id)
-    await openScript(state.activeScriptId)
-  } catch (err) {
-    alert('Versions failed: ' + (err && err.message))
-  }
 })
 
 // ---------- settings ----------
@@ -934,6 +803,7 @@ btnVersions.addEventListener('click', async () => {
 speedEl.addEventListener('input', () => {
   state.speed = clamp(Number(speedEl.value), 1, 10)
   speedVal.textContent = String(state.speed)
+  paintRangeFill(speedEl)
   window.cue.setSpeed(state.speed)
   updateLcd()
   saveState()
@@ -943,6 +813,7 @@ speedEl.addEventListener('input', () => {
 fontEl.addEventListener('input', () => {
   state.font = clamp(Number(fontEl.value), 16, 96)
   fontVal.textContent = `${state.font}px`
+  paintRangeFill(fontEl)
   window.cue.setFontSize(state.font)
   updateLcd()
   saveState()
@@ -952,15 +823,8 @@ fontEl.addEventListener('input', () => {
 opacityEl.addEventListener('input', () => {
   state.opacity = clamp(Number(opacityEl.value), 10, 100)
   opacityVal.textContent = `${state.opacity}%`
+  paintRangeFill(opacityEl)
   window.cue.setOpacity(state.opacity / 100)
-  updateLcd()
-  saveState()
-  scheduleSave()
-})
-
-smartPaceEl.addEventListener('change', () => {
-  state.smartPace = smartPaceEl.checked
-  window.cue.setSmartPace(state.smartPace)
   updateLcd()
   saveState()
   scheduleSave()
@@ -969,6 +833,7 @@ smartPaceEl.addEventListener('change', () => {
 countdownInput.addEventListener('input', () => {
   state.countdown = clamp(Number(countdownInput.value), 1, 10)
   countdownValEl.textContent = `${state.countdown}s`
+  paintRangeFill(countdownInput)
   saveState()
 })
 
@@ -985,9 +850,7 @@ applyPosBtn.addEventListener('click', () => {
   saveState()
 })
 
-captureTestBtn.addEventListener('click', () => window.cue.testCapture())
-
-// ---------- image ----------
+// ---------- image / reference ----------
 
 loadImageBtn.addEventListener('click', () => imageInput.click())
 imageInput.addEventListener('change', (e) => {
@@ -1044,7 +907,7 @@ referenceFocusBtn.addEventListener('click', () => {
   sendReferences()
 })
 
-// ---------- theme / mirror ----------
+// ---------- theme / mirror / mode ----------
 
 function setTheme(value) {
   const next = value === 'light' ? 'light' : 'dark'
@@ -1073,6 +936,29 @@ mirrorHBtn.addEventListener('click', () => setMirror('h'))
 mirrorVBtn.addEventListener('click', () => setMirror('v'))
 mirrorBothBtn.addEventListener('click', () => setMirror('both'))
 
+async function setMode(value) {
+  const next = value === 'voice' ? 'voice' : 'normal'
+  if (state.mode === next) {
+    renderModePills()
+    return
+  }
+  // when leaving voice mode, stop recognition
+  if (state.mode === 'voice' && next !== 'voice' && voiceActive) {
+    stopRecognition()
+    if (voiceToggleBtn) {
+      voiceToggleBtn.textContent = '🎙 Start Listening'
+      voiceToggleBtn.classList.add('primary')
+    }
+  }
+  state.mode = next
+  renderModePills()
+  saveState()
+  scheduleSave()
+}
+
+modeNormalBtn.addEventListener('click', () => setMode('normal'))
+modeVoiceBtn.addEventListener('click', () => setMode('voice'))
+
 // ---------- remote echoes ----------
 
 window.cue.onControlToggleEcho((v) => {
@@ -1094,6 +980,7 @@ window.cue.onRemoteSpeedSet((v) => {
   state.speed = clamp(Number(v) || 1, 1, 10)
   speedEl.value = state.speed
   speedVal.textContent = String(state.speed)
+  paintRangeFill(speedEl)
   saveState()
   pulse(speedEl)
 })
@@ -1102,6 +989,7 @@ window.cue.onRemoteFontSet((v) => {
   state.font = clamp(Number(v) || 32, 16, 96)
   fontEl.value = state.font
   fontVal.textContent = `${state.font}px`
+  paintRangeFill(fontEl)
   saveState()
   pulse(fontEl)
 })
@@ -1110,15 +998,13 @@ window.cue.onRemoteOpacitySet((v) => {
   state.opacity = clamp(Number(v) || 80, 10, 100)
   opacityEl.value = state.opacity
   opacityVal.textContent = `${state.opacity}%`
+  paintRangeFill(opacityEl)
   saveState()
   pulse(opacityEl)
 })
 
-window.cue.onRemoteSmartPaceSet((v) => {
-  state.smartPace = v !== false
-  smartPaceEl.checked = state.smartPace
-  saveState()
-  pulse(smartPaceEl)
+window.cue.onRemoteSmartPaceSet(() => {
+  // smart pace is always on now — ignore remote toggles
 })
 
 window.cue.onRemoteThemeSet((v) => {
@@ -1149,124 +1035,140 @@ window.cue.onRemoteStumble(() => {
   setTimeout(refreshSessions, 300)
 })
 
-window.cue.onMarkerEvent((evt) => {
-  // visual ack on the cue list could go here; minimal for v1
-})
+window.cue.onMarkerEvent((_evt) => { /* visual ack could go here */ })
 
 // ---------- remote info ----------
 
 let remoteUrl = ''
+let remoteState = { pending: true }
 
-function setRemoteUrl(url) {
-  remoteUrl = url || ''
-  remoteUrlEl.textContent = url || '—'
-  remoteCopyBtn.disabled = !url
-  remoteCopyBtn.style.opacity = url ? '1' : '0.5'
-}
-
-function setQr(dataUrl) {
-  if (dataUrl) {
-    qrImage.src = dataUrl
-    qrFrame.classList.remove('empty')
-  } else {
-    qrImage.removeAttribute('src')
-    qrFrame.classList.add('empty')
-  }
-}
-
-function setRemoteStatus(text, klass) {
-  remoteStatusText.textContent = text
-  remoteStatusLine.className = 'remote-status-line ' + (klass || '')
-}
-
-function setRemoteHeaderStatus(text) {
-  remoteStatusEl.textContent = text
-}
-
-function applyRemoteInfo(info) {
-  if (!info) return
-  if (info.error) {
-    setRemoteUrl('')
-    setQr(null)
-    setRemoteStatus('server failed: ' + info.error, 'error')
-    setRemoteHeaderStatus('error')
-    return
-  }
-  if (info.pending) {
-    setRemoteStatus('starting server…', '')
-    setRemoteHeaderStatus('starting…')
-    return
-  }
-  setRemoteUrl(info.url || '')
-  setQr(info.qr || null)
-  applyConnectionCount(typeof info.connections === 'number' ? info.connections : 0)
-}
-
-function applyConnectionCount(count) {
-  if (count > 0) {
-    setRemoteStatus(`${count} ${count === 1 ? 'phone' : 'phones'} connected`, 'connected')
-    setRemoteHeaderStatus(`${count} live`)
-  } else {
-    setRemoteStatus('waiting for phone…', '')
-    setRemoteHeaderStatus('ready')
-  }
+function setRemoteUrlState(info) {
+  remoteState = info || {}
 }
 
 async function loadRemoteInfo() {
   try {
     const info = await window.cue.getRemoteInfo()
-    applyRemoteInfo(info)
+    setRemoteUrlState(info)
+    renderRemotePanel()
   } catch {
-    setRemoteStatus('could not read remote info', 'error')
+    /* ignore */
   }
 }
 
-remoteCopyBtn.addEventListener('click', async () => {
-  if (!remoteUrl) return
-  try {
-    await navigator.clipboard.writeText(remoteUrl)
-    const orig = remoteCopyBtn.textContent
-    remoteCopyBtn.textContent = 'COPIED'
-    setTimeout(() => { remoteCopyBtn.textContent = orig }, 1200)
-  } catch { /* ignore */ }
-})
+function renderRemotePanel() {
+  const qrFrame = $('qr-frame')
+  const qrImage = $('qr-image')
+  const remoteUrlEl = $('remote-url')
+  const remoteCopyBtn = $('remote-copy')
+  const remoteStatusLine = $('remote-status-line')
+  const remoteStatusText = $('remote-status-text')
+  const remoteStatusEl = $('remote-status')
+  if (!qrFrame) return // panel not currently in DOM
 
-window.cue.onRemoteReady((info) => applyRemoteInfo(info))
-window.cue.onRemoteError((err) => applyRemoteInfo({ error: err || 'unknown error' }))
-window.cue.onRemoteConnections((count) => applyConnectionCount(count))
+  if (remoteState.error) {
+    if (remoteUrlEl) remoteUrlEl.textContent = '—'
+    if (remoteCopyBtn) { remoteCopyBtn.disabled = true; remoteCopyBtn.style.opacity = '0.5' }
+    if (qrImage) qrImage.removeAttribute('src')
+    qrFrame.classList.add('empty')
+    if (remoteStatusText) remoteStatusText.textContent = 'server failed: ' + remoteState.error
+    if (remoteStatusLine) remoteStatusLine.className = 'remote-status-line error'
+    if (remoteStatusEl) remoteStatusEl.textContent = 'error'
+    return
+  }
+  if (remoteState.pending) {
+    if (remoteStatusText) remoteStatusText.textContent = 'starting server…'
+    if (remoteStatusEl) remoteStatusEl.textContent = 'starting…'
+    return
+  }
+  remoteUrl = remoteState.url || ''
+  if (remoteUrlEl) remoteUrlEl.textContent = remoteUrl || '—'
+  if (remoteCopyBtn) {
+    remoteCopyBtn.disabled = !remoteUrl
+    remoteCopyBtn.style.opacity = remoteUrl ? '1' : '0.5'
+    remoteCopyBtn.onclick = async () => {
+      if (!remoteUrl) return
+      try {
+        await navigator.clipboard.writeText(remoteUrl)
+        const orig = remoteCopyBtn.textContent
+        remoteCopyBtn.textContent = 'Copied'
+        setTimeout(() => { remoteCopyBtn.textContent = orig }, 1200)
+      } catch { /* ignore */ }
+    }
+  }
+  if (remoteState.qr && qrImage) {
+    qrImage.src = remoteState.qr
+    qrFrame.classList.remove('empty')
+  } else if (qrImage) {
+    qrImage.removeAttribute('src')
+    qrFrame.classList.add('empty')
+  }
+  const count = typeof remoteState.connections === 'number' ? remoteState.connections : 0
+  if (count > 0) {
+    if (remoteStatusText) remoteStatusText.textContent = `${count} ${count === 1 ? 'phone' : 'phones'} connected`
+    if (remoteStatusLine) remoteStatusLine.className = 'remote-status-line connected'
+    if (remoteStatusEl) remoteStatusEl.textContent = `${count} live`
+  } else {
+    if (remoteStatusText) remoteStatusText.textContent = 'waiting for phone…'
+    if (remoteStatusLine) remoteStatusLine.className = 'remote-status-line'
+    if (remoteStatusEl) remoteStatusEl.textContent = 'ready'
+  }
+}
+
+window.cue.onRemoteReady((info) => {
+  setRemoteUrlState(info)
+  renderRemotePanel()
+})
+window.cue.onRemoteError((err) => {
+  setRemoteUrlState({ error: err || 'unknown error' })
+  renderRemotePanel()
+})
+window.cue.onRemoteConnections((count) => {
+  remoteState.connections = count
+  renderRemotePanel()
+})
 
 // ---------- sessions ----------
 
+let sessionsCache = []
+
 async function refreshSessions() {
   if (!dbStatus.connected || !state.activeScriptId) {
-    sessionList.innerHTML = '<div class="cue-empty">No sessions yet.</div>'
-    sessionCount.textContent = '—'
+    sessionsCache = []
+    renderSessionPanel()
     return
   }
   try {
-    const sessions = await window.cue.sessionsList(state.activeScriptId)
-    sessionCount.textContent = `${sessions.length} run${sessions.length === 1 ? '' : 's'}`
-    sessionList.innerHTML = ''
-    if (!sessions.length) {
-      sessionList.innerHTML = '<div class="cue-empty">No sessions yet.</div>'
-      return
-    }
-    for (const s of sessions.slice(0, 20)) {
-      const row = document.createElement('div')
-      row.className = 'session-row'
-      const start = new Date(s.startedAt)
-      const end = s.endedAt ? new Date(s.endedAt) : null
-      const durMs = end ? end - start : 0
-      const dur = durMs ? `${Math.round(durMs / 1000)}s` : '—'
-      row.innerHTML = `
-        <span class="when">${escapeHtml(start.toLocaleString())}</span>
-        <span class="dur">${dur}</span>
-        <span class="ev">${end ? 'done' : 'live'}</span>
-      `
-      sessionList.appendChild(row)
-    }
+    sessionsCache = await window.cue.sessionsList(state.activeScriptId)
   } catch {
-    sessionList.innerHTML = '<div class="cue-empty">Failed to load sessions.</div>'
+    sessionsCache = []
+  }
+  renderSessionPanel()
+}
+
+function renderSessionPanel() {
+  const sessionList = $('session-list')
+  const sessionCount = $('session-count')
+  if (!sessionList) return
+  if (sessionCount) sessionCount.textContent = `${sessionsCache.length} run${sessionsCache.length === 1 ? '' : 's'}`
+  sessionList.innerHTML = ''
+  if (!sessionsCache.length) {
+    sessionList.innerHTML = '<div class="cue-empty">No sessions yet.</div>'
+    return
+  }
+  for (const s of sessionsCache.slice(0, 30)) {
+    const row = document.createElement('div')
+    row.className = 'session-row'
+    const start = new Date(s.startedAt)
+    const end = s.endedAt ? new Date(s.endedAt) : null
+    const durMs = end ? end - start : 0
+    const dur = durMs ? `${Math.round(durMs / 1000)}s` : '—'
+    row.innerHTML = `
+      <span class="when">${escapeHtml(start.toLocaleString())}</span>
+      <span class="dur">${dur}</span>
+      <span class="ev">${end ? 'done' : 'live'}</span>
+    `
+    sessionList.appendChild(row)
   }
 }
 
@@ -1286,14 +1188,13 @@ window.cue.onDbStatus((s) => {
   if (!s) return
   const wasConnected = dbStatus.connected
   dbStatus = s
-  renderDbStatus()
-  // bootstrap only the first time we see a connected status
+  renderLib()
   if (dbStatus.connected && !wasConnected) bootstrap()
 })
 
 window.cue.dbStatus().then((s) => {
   dbStatus = s || { connected: false, error: 'unknown' }
-  renderDbStatus()
+  renderLib()
   if (dbStatus.connected) bootstrap()
 })
 
@@ -1304,11 +1205,12 @@ async function populatePlatform() {
     const info = await window.cue.getPlatform()
     const platMap = { darwin: 'macOS', win32: 'Windows', linux: 'Linux' }
     const platName = platMap[info.platform] || info.platform
-    platformVal.textContent = `${platName} (${info.osRelease})`
-    archVal.textContent = info.arch
+    const pv = $('platform-val')
+    const av = $('arch-val')
+    if (pv) pv.textContent = `${platName} (${info.osRelease})`
+    if (av) av.textContent = info.arch
   } catch {
-    platformVal.textContent = 'unknown'
-    archVal.textContent = 'unknown'
+    /* ignore — platform info appears only in modal */
   }
 }
 
@@ -1317,7 +1219,7 @@ async function populatePlatform() {
 let voiceActive = false
 let voiceFinalText = ''
 let voiceInterimText = ''
-let voiceCursorChar = 0 // current matched position into parsed.plainText
+let voiceCursorChar = 0
 let voiceWordCursor = 0
 let voiceWords = []
 let voiceWordsPerSecond = 2.4
@@ -1333,25 +1235,18 @@ let voiceSilence = null
 const VOICE_SAMPLE_RATE = 16000
 
 function setVoiceStatus(text) {
-  voiceStatusEl.textContent = text
+  if (voiceStatusEl) voiceStatusEl.textContent = text
 }
 
-function tokenize(s) {
-  return window.voiceMatch.tokenize(s)
-}
-
-function buildVoiceWords(plain) {
-  return window.voiceMatch.buildVoiceWords(plain)
-}
+function tokenize(s) { return window.voiceMatch.tokenize(s) }
+function buildVoiceWords(plain) { return window.voiceMatch.buildVoiceWords(plain) }
 
 function voiceDebug(source, data) {
   try {
     if (window.cue && typeof window.cue.voiceDebug === 'function') {
       window.cue.voiceDebug(source, data)
     }
-  } catch {
-    /* debug only */
-  }
+  } catch { /* debug only */ }
 }
 
 function voiceWordWindow(index, radius = 5) {
@@ -1393,12 +1288,8 @@ function findExpectedMatch(transcript, evt = {}) {
     if (evt.isFinal || now - lastVoiceMissLogAt > 900) {
       lastVoiceMissLogAt = now
       voiceDebug('match-miss', {
-        seq,
-        isFinal: !!evt.isFinal,
-        speechFinal: !!evt.speechFinal,
-        cursorBefore,
-        searchBack,
-        lookAhead,
+        seq, isFinal: !!evt.isFinal, speechFinal: !!evt.speechFinal,
+        cursorBefore, searchBack, lookAhead,
         spokenTail: spoken.join(' '),
         expectedNearCursor: voiceWordWindow(cursorBefore)
       })
@@ -1414,44 +1305,7 @@ function findExpectedMatch(transcript, evt = {}) {
   const bigJump = recentlyMatched && advance >= 9
   const riskyJump = recentlyMatched && advance >= 5 && confidence < 0.68
   const weakBigJump = bigJump && (confidence < 0.85 || best.score < 8)
-  if (weakBigJump || riskyJump) {
-    voiceDebug('match-reject', {
-      seq,
-      reason: weakBigJump ? 'weak-big-jump' : 'risky-jump',
-      isFinal: !!evt.isFinal,
-      speechFinal: !!evt.speechFinal,
-      cursorBefore,
-      matchedIdx,
-      advance,
-      confidence: Number(confidence.toFixed(3)),
-      score: best.score,
-      skippedSpoken: best.skippedSpoken,
-      skippedExpected: best.skippedExpected,
-      spokenTail: spoken.join(' '),
-      expectedNearCursor: voiceWordWindow(cursorBefore),
-      expectedNearMatch: voiceWordWindow(matchedIdx)
-    })
-    return null
-  }
-  if (evt.isFinal || advance >= 5 || confidence < 0.72) {
-    voiceDebug('match-hit', {
-      seq,
-      isFinal: !!evt.isFinal,
-      speechFinal: !!evt.speechFinal,
-      cursorBefore,
-      matchedIdx,
-      advance,
-      charPos: matchedEnd.end,
-      confidence: Number(confidence.toFixed(3)),
-      score: best.score,
-      skippedSpoken: best.skippedSpoken,
-      skippedExpected: best.skippedExpected,
-      searchBack,
-      lookAhead,
-      spokenTail: spoken.join(' '),
-      expectedNearMatch: voiceWordWindow(matchedIdx)
-    })
-  }
+  if (weakBigJump || riskyJump) return null
   return {
     charPos: matchedEnd.end,
     wordIndex: matchedIdx + 1,
@@ -1463,7 +1317,6 @@ function emitVoiceScroll(match) {
   if (!match || match.charPos == null) return
   const now = performance.now()
   const nextWordIndex = Math.max(voiceWordCursor, match.wordIndex || 0)
-  const advance = nextWordIndex - voiceWordCursor
   if (lastVoiceMatchAt && nextWordIndex > lastVoiceMatchWordIndex) {
     const elapsed = (now - lastVoiceMatchAt) / 1000
     if (elapsed >= 0.12 && elapsed <= 3) {
@@ -1482,15 +1335,6 @@ function emitVoiceScroll(match) {
     wordsPerSecond: voiceWordsPerSecond,
     confidence: match.confidence || 0
   })
-  if (advance >= 5 || (match.confidence || 0) < 0.72) {
-    voiceDebug('scroll-emit', {
-      wordIndex: voiceWordCursor,
-      charPos: match.charPos,
-      advance,
-      wordsPerSecond: Number(voiceWordsPerSecond.toFixed(2)),
-      confidence: Number((match.confidence || 0).toFixed(3))
-    })
-  }
 }
 
 function downsampleTo16k(input, sourceRate) {
@@ -1522,6 +1366,7 @@ function floatToPcm16(samples) {
 }
 
 function renderVoiceTranscript() {
+  if (!voiceTranscriptEl) return
   voiceTranscriptEl.innerHTML =
     escapeHtml(voiceFinalText.trim().slice(-300)) +
     ' <span class="partial">' +
@@ -1536,12 +1381,7 @@ async function startRecognition() {
 
   try {
     voiceStream = await navigator.mediaDevices.getUserMedia({
-      audio: {
-        channelCount: 1,
-        echoCancellation: true,
-        noiseSuppression: true,
-        autoGainControl: true
-      }
+      audio: { channelCount: 1, echoCancellation: true, noiseSuppression: true, autoGainControl: true }
     })
     voiceAudioCtx = new (window.AudioContext || window.webkitAudioContext)()
     if (voiceAudioCtx.state === 'suspended') await voiceAudioCtx.resume()
@@ -1560,11 +1400,11 @@ async function startRecognition() {
     voiceSilence.connect(voiceAudioCtx.destination)
 
     voiceActive = true
-    voiceTranscriptEl.classList.add('active')
+    if (voiceTranscriptEl) voiceTranscriptEl.classList.add('active')
     window.cue.voiceState({ active: true })
   } catch (err) {
     setVoiceStatus('mic error')
-    voiceTranscriptEl.textContent = err && err.message ? err.message : 'Microphone failed.'
+    if (voiceTranscriptEl) voiceTranscriptEl.textContent = err && err.message ? err.message : 'Microphone failed.'
     stopRecognition()
   }
 }
@@ -1572,28 +1412,19 @@ async function startRecognition() {
 function stopRecognition() {
   voiceActive = false
   setVoiceStatus('off')
-  voiceTranscriptEl.classList.remove('active')
+  if (voiceTranscriptEl) voiceTranscriptEl.classList.remove('active')
   if (voiceProcessor) {
     try { voiceProcessor.disconnect() } catch {}
     voiceProcessor.onaudioprocess = null
     voiceProcessor = null
   }
-  if (voiceSource) {
-    try { voiceSource.disconnect() } catch {}
-    voiceSource = null
-  }
-  if (voiceSilence) {
-    try { voiceSilence.disconnect() } catch {}
-    voiceSilence = null
-  }
+  if (voiceSource) { try { voiceSource.disconnect() } catch {}; voiceSource = null }
+  if (voiceSilence) { try { voiceSilence.disconnect() } catch {}; voiceSilence = null }
   if (voiceStream) {
     for (const track of voiceStream.getTracks()) track.stop()
     voiceStream = null
   }
-  if (voiceAudioCtx) {
-    try { voiceAudioCtx.close() } catch {}
-    voiceAudioCtx = null
-  }
+  if (voiceAudioCtx) { try { voiceAudioCtx.close() } catch {}; voiceAudioCtx = null }
   window.cue.voiceStop()
   window.cue.voiceState({ active: false })
 }
@@ -1602,7 +1433,7 @@ window.cue.onVoiceStatus((evt) => {
   if (!evt) return
   if (evt.status === 'error') {
     setVoiceStatus('error')
-    if (evt.detail) voiceTranscriptEl.textContent = evt.detail
+    if (evt.detail && voiceTranscriptEl) voiceTranscriptEl.textContent = evt.detail
   } else {
     setVoiceStatus(evt.status || 'off')
   }
@@ -1621,29 +1452,33 @@ window.cue.onVoiceTranscript((evt) => {
   if (target != null) emitVoiceScroll(target)
 })
 
-voiceToggleBtn.addEventListener('click', async () => {
-  if (voiceActive) {
-    stopRecognition()
-    voiceToggleBtn.textContent = '🎙 START VOICE'
-    voiceToggleBtn.classList.add('primary')
-  } else {
-    await startRecognition()
-    if (!voiceActive) return
-    voiceToggleBtn.textContent = '⏹ STOP VOICE'
-    voiceToggleBtn.classList.remove('primary')
-  }
-})
+if (voiceToggleBtn) {
+  voiceToggleBtn.addEventListener('click', async () => {
+    if (voiceActive) {
+      stopRecognition()
+      voiceToggleBtn.textContent = '🎙 Start Listening'
+      voiceToggleBtn.classList.add('primary')
+    } else {
+      await startRecognition()
+      if (!voiceActive) return
+      voiceToggleBtn.textContent = '⏹ Stop Listening'
+      voiceToggleBtn.classList.remove('primary')
+    }
+  })
+}
 
-voiceClearBtn.addEventListener('click', () => {
-  voiceFinalText = ''
-  voiceInterimText = ''
-  voiceCursorChar = 0
-  voiceWordCursor = 0
-  voiceWordsPerSecond = 2.4
-  lastVoiceMatchAt = 0
-  lastVoiceMatchWordIndex = 0
-  voiceTranscriptEl.innerHTML = '—'
-})
+if (voiceClearBtn) {
+  voiceClearBtn.addEventListener('click', () => {
+    voiceFinalText = ''
+    voiceInterimText = ''
+    voiceCursorChar = 0
+    voiceWordCursor = 0
+    voiceWordsPerSecond = 2.4
+    lastVoiceMatchAt = 0
+    lastVoiceMatchWordIndex = 0
+    if (voiceTranscriptEl) voiceTranscriptEl.innerHTML = '—'
+  })
+}
 
 // ---------- fullscreen toggle ----------
 
@@ -1653,27 +1488,28 @@ let isFullscreen = false
 function setFsLabel(active) {
   isFullscreen = !!active
   if (!fsBtn) return
-  fsBtn.textContent = active ? '⛶ EXIT' : '⛶ FULL'
+  fsBtn.textContent = active ? '⛶ Exit' : '⛶ Full'
   fsBtn.classList.toggle('active', !!active)
 }
 
 if (fsBtn) {
-  fsBtn.addEventListener('click', () => {
-    window.cue.toggleFullscreen()
-  })
+  fsBtn.addEventListener('click', () => { window.cue.toggleFullscreen() })
 }
 
-window.cue.onFullscreenState((active) => {
-  setFsLabel(active)
-})
+window.cue.onFullscreenState((active) => { setFsLabel(active) })
 
 window.addEventListener('keydown', (e) => {
   if (e.key === 'F11') {
     e.preventDefault()
     window.cue.toggleFullscreen()
-  } else if (e.key === 'Escape' && isFullscreen) {
-    e.preventDefault()
-    window.cue.toggleFullscreen(false)
+  } else if (e.key === 'Escape') {
+    if (!panelModal.hidden) {
+      e.preventDefault()
+      hidePanelModal()
+    } else if (isFullscreen) {
+      e.preventDefault()
+      window.cue.toggleFullscreen(false)
+    }
   }
 })
 
@@ -1683,20 +1519,16 @@ const overlayToggleBtn = $('overlay-toggle')
 
 function setOverlayLabel(visible) {
   if (!overlayToggleBtn) return
-  overlayToggleBtn.textContent = visible ? '👁 OVERLAY ON' : '👁 OVERLAY OFF'
+  overlayToggleBtn.textContent = visible ? '👁 Overlay On' : '👁 Overlay Off'
   overlayToggleBtn.classList.toggle('active', !!visible)
   if (lcdOverlay) lcdOverlay.classList.toggle('on', !!visible)
 }
 
 if (overlayToggleBtn) {
-  overlayToggleBtn.addEventListener('click', () => {
-    window.cue.toggleOverlay()
-  })
+  overlayToggleBtn.addEventListener('click', () => { window.cue.toggleOverlay() })
 }
 
-window.cue.onOverlayVisibility((visible) => {
-  setOverlayLabel(visible)
-})
+window.cue.onOverlayVisibility((visible) => { setOverlayLabel(visible) })
 
 // ---------- focus mode ----------
 
@@ -1710,35 +1542,6 @@ if (focusBtn) {
 
 // ---------- production: analytics consent + diagnostics ----------
 
-async function populateDiagnostics() {
-  try {
-    const d = await window.cue.getDiagnostics()
-    if (!d) return
-    const setText = (id, txt) => {
-      const el = $(id)
-      if (el) el.textContent = txt
-    }
-    setText('diag-install', d.installId ? d.installId.slice(0, 8) + '…' : '—')
-    setText('diag-version', d.appVersion || '—')
-    if (d.boot) {
-      setText('diag-api', d.boot.offline ? 'offline (using cache)' : 'connected')
-      const policy = d.boot.killSwitch
-        ? 'blocked'
-        : d.boot.updateRequired
-          ? 'update required'
-          : d.boot.cachedStatus && d.boot.cachedStatus !== 'allowed'
-            ? d.boot.cachedStatus + ' (cached)'
-            : d.boot.status || 'allowed'
-      setText('diag-policy', policy)
-    } else {
-      setText('diag-api', 'unknown')
-      setText('diag-policy', '—')
-    }
-  } catch {
-    /* diagnostics are best-effort */
-  }
-}
-
 function initProductionUI() {
   const consentEl = $('analytics-consent')
   const modal = $('consent-modal')
@@ -1751,14 +1554,12 @@ function initProductionUI() {
     saveState()
   }
 
-  // sync the main process with the persisted choice on every launch
   window.cue.setAnalyticsConsent(!!state.analytics)
   if (consentEl) {
     consentEl.checked = !!state.analytics
     consentEl.addEventListener('change', () => applyConsent(consentEl.checked))
   }
 
-  // first-launch consent modal — opt-in, default OFF
   if (!state.analyticsAsked && modal) {
     modal.hidden = false
     const accept = $('consent-accept')
@@ -1777,24 +1578,133 @@ function initProductionUI() {
     }
   }
 
-  populateDiagnostics()
-
-  // forward renderer errors to the telemetry queue (consent-gated in main)
   window.addEventListener('error', (e) => {
-    try {
-      window.cue.reportError({ name: e && e.error && e.error.name })
-    } catch {
-      /* ignore */
-    }
+    try { window.cue.reportError({ name: e && e.error && e.error.name }) } catch {}
   })
   window.addEventListener('unhandledrejection', (e) => {
-    try {
-      window.cue.reportError({ name: e && e.reason && e.reason.name })
-    } catch {
-      /* ignore */
-    }
+    try { window.cue.reportError({ name: e && e.reason && e.reason.name }) } catch {}
   })
 }
+
+// ---------- panel modal (driven by app menu) ----------
+
+const PANEL_TITLES = {
+  library: 'Library',
+  sessions: 'Sessions',
+  'capture-status': 'Capture Protection',
+  remote: 'Remote / QR',
+  shortcuts: 'Keyboard Shortcuts'
+}
+
+function showPanelModal(panel) {
+  if (!panelModal || !panelBody || !panelTemplatesEl) return
+  const tpl = panelTemplatesEl.querySelector(`[data-panel="${panel}"]`)
+  if (!tpl) return
+  panelBody.innerHTML = ''
+  // clone children so the template stays intact
+  for (const node of Array.from(tpl.children)) {
+    panelBody.appendChild(node.cloneNode(true))
+  }
+  panelTitle.textContent = PANEL_TITLES[panel] || 'Panel'
+  panelModal.hidden = false
+  panelModal.dataset.panel = panel
+
+  // wire up panel-specific content
+  if (panel === 'library') {
+    wireLibraryPanel()
+    refreshLib()
+  } else if (panel === 'sessions') {
+    refreshSessions()
+  } else if (panel === 'capture-status') {
+    wireCapturePanel()
+    populatePlatform()
+  } else if (panel === 'remote') {
+    renderRemotePanel()
+  }
+}
+
+function hidePanelModal() {
+  if (!panelModal) return
+  panelModal.hidden = true
+  panelModal.dataset.panel = ''
+}
+
+if (panelCloseBtn) panelCloseBtn.addEventListener('click', hidePanelModal)
+if (panelModal) {
+  panelModal.addEventListener('click', (e) => {
+    if (e.target === panelModal) hidePanelModal()
+  })
+}
+
+function wireLibraryPanel() {
+  const libNewBtn = $('lib-new')
+  const libLoadFileBtn = $('lib-load-file')
+  const libSnapshotBtn = $('lib-snapshot')
+  const libVersionsBtn = $('lib-versions')
+
+  if (libNewBtn) {
+    libNewBtn.addEventListener('click', async () => {
+      await createNewScript()
+      hidePanelModal()
+    })
+  }
+  if (libLoadFileBtn) {
+    libLoadFileBtn.addEventListener('click', () => fileInput.click())
+  }
+  if (libSnapshotBtn) {
+    libSnapshotBtn.disabled = !dbStatus.connected || !state.activeScriptId
+    libSnapshotBtn.addEventListener('click', async () => {
+      if (!dbStatus.connected || !state.activeScriptId) return
+      try {
+        await window.cue.scriptsSnapshot(state.activeScriptId)
+        const orig = libSnapshotBtn.textContent
+        libSnapshotBtn.textContent = '✓ Saved'
+        setTimeout(() => { libSnapshotBtn.textContent = orig }, 1200)
+      } catch (err) {
+        alert('Snapshot failed: ' + (err && err.message))
+      }
+    })
+  }
+  if (libVersionsBtn) {
+    libVersionsBtn.disabled = !dbStatus.connected || !state.activeScriptId
+    libVersionsBtn.addEventListener('click', async () => {
+      if (!dbStatus.connected || !state.activeScriptId) return
+      try {
+        const v = await window.cue.scriptsVersions(state.activeScriptId)
+        if (!v.length) { alert('No version snapshots yet.'); return }
+        const choices = v.map((x, i) => `${i + 1}. ${new Date(x.savedAt).toLocaleString()}`).join('\n')
+        const ans = prompt(`Versions:\n${choices}\n\nEnter number to restore (cancel to keep current):`)
+        const idx = parseInt(ans, 10)
+        if (!isFinite(idx) || idx < 1 || idx > v.length) return
+        if (!confirm(`Restore version from ${new Date(v[idx - 1].savedAt).toLocaleString()}? Current text will be replaced.`)) return
+        await window.cue.scriptsRestore(state.activeScriptId, v[idx - 1].id)
+        await openScript(state.activeScriptId)
+      } catch (err) {
+        alert('Versions failed: ' + (err && err.message))
+      }
+    })
+  }
+}
+
+function wireCapturePanel() {
+  const captureTestBtn = $('capture-test')
+  if (captureTestBtn) {
+    captureTestBtn.addEventListener('click', () => window.cue.testCapture())
+  }
+}
+
+window.cue.onShowPanel((panel) => {
+  if (!panel) return
+  if (panel === 'new-script') {
+    createNewScript()
+    return
+  }
+  if (panel === 'import-file') {
+    fileInput.click()
+    return
+  }
+  showPanelModal(panel)
+})
 
 // ---------- bootstrap ----------
 

@@ -156,5 +156,9 @@ contextBridge.exposeInMainWorld('cue', {
     ipcRenderer.on('remote:stumble', () => cb()),
 
   onSessionEvent: (cb) =>
-    ipcRenderer.on('session:event', (_, v) => cb(v))
+    ipcRenderer.on('session:event', (_, v) => cb(v)),
+
+  // --- menu-driven panel toggles (from app menu) ---
+  onShowPanel: (cb) =>
+    ipcRenderer.on('control:show-panel', (_, v) => cb(v))
 })

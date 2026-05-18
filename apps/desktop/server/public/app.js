@@ -44,9 +44,7 @@ const referenceNextBtn = $('reference-next')
 const toast = $('toast')
 
 const cueCountReadout = $('cue-count-readout')
-const chapterList = $('chapter-list')
-const reactionReadout = $('reaction-readout')
-const mirrorReadout = $('mirror-readout')
+const chapterSelect = $('chapter-select')
 const mirrorRow = $('mirror-row')
 const jumpPrevBtn = $('jump-prev')
 const jumpNextBtn = $('jump-next')
@@ -126,8 +124,7 @@ function renderState() {
   themeLabel.textContent = state.theme === 'light' ? 'LIGHT' : 'DARK'
 
   cueCountReadout.textContent = String(state.cueCount || 0)
-  mirrorReadout.textContent = (state.mirror || 'none').toUpperCase()
-  for (const btn of mirrorRow.querySelectorAll('.mirror-btn')) {
+  for (const btn of mirrorRow.querySelectorAll('[data-mirror]')) {
     btn.classList.toggle('active', btn.dataset.mirror === state.mirror)
   }
 
@@ -144,31 +141,24 @@ function renderState() {
 }
 
 function renderChapters() {
-  chapterList.innerHTML = ''
+  if (!chapterSelect) return
   const chapters = state.chapters || []
-  if (!chapters.length) {
-    const e = document.createElement('div')
-    e.className = 'chapter-empty'
-    e.textContent = 'No chapters yet'
-    chapterList.appendChild(e)
-    return
-  }
+  const previous = chapterSelect.value
+  chapterSelect.innerHTML = ''
+  const placeholder = document.createElement('option')
+  placeholder.value = ''
+  placeholder.textContent = chapters.length
+    ? '— jump to chapter —'
+    : 'No chapters yet'
+  chapterSelect.appendChild(placeholder)
   for (const ch of chapters) {
-    const row = document.createElement('div')
-    row.className = 'chapter-row'
-    row.dataset.id = ch.id
-    row.innerHTML = `
-      <span class="title"></span>
-      <button>JUMP</button>
-    `
-    row.querySelector('.title').textContent = ch.title || 'Untitled'
-    row.querySelector('button').addEventListener('click', () => {
-      send('jump:chapter', ch.id)
-      row.classList.add('marker-pulse')
-      setTimeout(() => row.classList.remove('marker-pulse'), 600)
-    })
-    chapterList.appendChild(row)
+    const opt = document.createElement('option')
+    opt.value = ch.id
+    opt.textContent = ch.title || 'Untitled'
+    chapterSelect.appendChild(opt)
   }
+  chapterSelect.disabled = chapters.length === 0
+  chapterSelect.value = previous || ''
 }
 
 function send(cmd, value) {
@@ -223,20 +213,7 @@ function connect() {
       cueCountReadout.textContent = String(state.cueCount)
       renderChapters()
     } else if (msg.type === 'marker-hit' && msg.payload) {
-      const m = msg.payload
-      if (m && m.type === 'react') {
-        const r = m.payload && m.payload.reaction
-        if (r) reactionReadout.textContent = String(r).toUpperCase()
-        setTimeout(() => { reactionReadout.textContent = '—' }, 2500)
-      }
-      // briefly pulse the chapter row if this hit is a chapter
-      if (m && m.type === 'chapter' && m.id) {
-        const row = chapterList.querySelector(`[data-id="${m.id}"]`)
-        if (row) {
-          row.classList.add('marker-pulse')
-          setTimeout(() => row.classList.remove('marker-pulse'), 600)
-        }
-      }
+      // chapter pulse no longer needed (chapters now in a dropdown); reactions removed
     } else if (msg.type === 'image') {
       const url = msg.payload
       if (url && typeof url === 'string') {
@@ -427,26 +404,23 @@ countdownBtn.addEventListener('click', () => {
   }
 })
 
-for (const btn of document.querySelectorAll('.react-btn')) {
-  btn.addEventListener('click', () => {
-    const r = btn.getAttribute('data-reaction')
-    if (!r) return
-    send('reaction', r)
-    reactionReadout.textContent = r.toUpperCase()
-    setTimeout(() => { reactionReadout.textContent = '—' }, 2500)
-  })
-}
-
-for (const btn of mirrorRow.querySelectorAll('.mirror-btn')) {
+for (const btn of mirrorRow.querySelectorAll('[data-mirror]')) {
   btn.addEventListener('click', () => {
     const m = btn.getAttribute('data-mirror')
     if (!m) return
     state.mirror = m
-    for (const b of mirrorRow.querySelectorAll('.mirror-btn')) {
+    for (const b of mirrorRow.querySelectorAll('[data-mirror]')) {
       b.classList.toggle('active', b === btn)
     }
-    mirrorReadout.textContent = m.toUpperCase()
     send('mirror', m)
+  })
+}
+
+if (chapterSelect) {
+  chapterSelect.addEventListener('change', () => {
+    const id = chapterSelect.value
+    if (!id) return
+    send('jump:chapter', id)
   })
 }
 

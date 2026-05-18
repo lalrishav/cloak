@@ -41,116 +41,29 @@
       </div>
     </header>
 
-    <section class="primary">
-      <button class="play-disc paused" id="play" aria-label="Play / Pause">
-        <span class="play-icon" id="play-icon">▶</span>
-      </button>
-      <div class="quick-row">
-        <button class="quick-btn" id="reset">
-          <span class="quick-icon">↺</span>
-          <span class="quick-label">RESET</span>
-        </button>
-        <button class="quick-btn" id="theme-toggle">
-          <span class="quick-icon" id="theme-icon">☾</span>
-          <span class="quick-label" id="theme-label">DARK</span>
+    <!-- TOP: theme + mirror -->
+    <section class="top-controls">
+      <div class="seg-group" aria-label="Theme">
+        <button class="seg-pill active" id="theme-toggle">
+          <span class="seg-ic" id="theme-icon">☾</span>
+          <span class="seg-text" id="theme-label">DARK</span>
         </button>
       </div>
-    </section>
-
-    <section>
-      <div class="dpad-label">
-        <span>CUES</span>
-        <span class="readout" id="cue-count-readout">0</span>
-      </div>
-      <div class="cue-grid">
-        <button class="cue-btn" id="jump-prev">
-          <span class="ic">◀</span>
-          <span>PREV</span>
-        </button>
-        <button class="cue-btn" id="jump-next">
-          <span class="ic">▶</span>
-          <span>NEXT</span>
-        </button>
-        <button class="cue-btn warn" id="stumble">
-          <span class="ic">⚑</span>
-          <span>STUMBLE</span>
-        </button>
-        <button class="cue-btn" id="countdown">
-          <span class="ic">⏱</span>
-          <span>COUNT</span>
-        </button>
-      </div>
-      <div class="chapter-list" id="chapter-list">
-        <div class="chapter-empty">No chapters yet</div>
+      <div class="seg-group seg-group-grow" id="mirror-row" aria-label="Mirror">
+        <button class="seg-pill active" data-mirror="none">NONE</button>
+        <button class="seg-pill" data-mirror="h">⇄ H</button>
+        <button class="seg-pill" data-mirror="v">⇅ V</button>
+        <button class="seg-pill" data-mirror="both">⇄⇅</button>
       </div>
     </section>
 
-    <section>
-      <div class="dpad-label">
-        <span>REACTIONS</span>
-        <span class="readout" id="reaction-readout">—</span>
-      </div>
-      <div class="react-grid">
-        <button class="react-btn" data-reaction="smile">🙂<span class="nm">SMILE</span></button>
-        <button class="react-btn" data-reaction="laugh">😄<span class="nm">LAUGH</span></button>
-        <button class="react-btn" data-reaction="nod">👍<span class="nm">NOD</span></button>
-        <button class="react-btn" data-reaction="wave">👋<span class="nm">WAVE</span></button>
-        <button class="react-btn" data-reaction="point">👉<span class="nm">POINT</span></button>
-        <button class="react-btn" data-reaction="wink">😉<span class="nm">WINK</span></button>
-        <button class="react-btn" data-reaction="shrug">🤷<span class="nm">SHRUG</span></button>
-        <button class="react-btn" data-reaction="clap">👏<span class="nm">CLAP</span></button>
-        <button class="react-btn" data-reaction="cry">😢<span class="nm">CRY</span></button>
-        <button class="react-btn" data-reaction="thumbsup">👍<span class="nm">YES</span></button>
-      </div>
-    </section>
-
-    <section>
-      <div class="dpad-label">
-        <span>MIRROR</span>
-        <span class="readout" id="mirror-readout">NONE</span>
-      </div>
-      <div class="mirror-row" id="mirror-row">
-        <button class="mirror-btn active" data-mirror="none">NONE</button>
-        <button class="mirror-btn" data-mirror="h">⇄ H</button>
-        <button class="mirror-btn" data-mirror="v">⇅ V</button>
-        <button class="mirror-btn" data-mirror="both">⇄⇅</button>
-      </div>
-    </section>
-
-    <section class="dpad">
-      <div class="dpad-label">
-        <span>SPEED</span>
-        <span class="readout" id="speed-readout">3</span>
-      </div>
-      <div class="dpad-row">
-        <button class="dpad-btn" id="speed-down" aria-label="Slower">−</button>
-        <div class="dpad-bar"><div class="dpad-fill" id="speed-fill"></div></div>
-        <button class="dpad-btn" id="speed-up" aria-label="Faster">+</button>
-      </div>
-    </section>
-
-    <section class="dpad">
-      <div class="dpad-label">
-        <span>FONT</span>
-        <span class="readout" id="font-readout">32 px</span>
-      </div>
-      <div class="dpad-row">
-        <button class="dpad-btn" id="font-down" aria-label="Smaller">−</button>
-        <div class="dpad-bar"><div class="dpad-fill" id="font-fill"></div></div>
-        <button class="dpad-btn" id="font-up" aria-label="Larger">+</button>
-      </div>
-    </section>
-
-    <section class="slider-section">
-      <div class="dpad-label">
-        <span>OPACITY</span>
-        <span class="readout" id="opacity-readout">80%</span>
-      </div>
-      <input type="range" id="opacity" min="10" max="100" value="80" />
-    </section>
-
+    <!-- REFERENCES (moved up) -->
     <section class="image-section">
       <div class="dpad-label"><span>REFERENCES</span><span class="readout" id="image-readout">—</span></div>
+      <div class="image-preview" id="image-preview">
+        <img id="image-thumb" alt="" />
+        <span class="empty-text">No image attached</span>
+      </div>
       <div class="image-row">
         <button class="quick-btn" id="upload-image">
           <span class="quick-icon">▤</span>
@@ -170,10 +83,81 @@
         </button>
         <input type="file" id="image-file" accept="image/*" multiple hidden />
       </div>
-      <div class="image-preview" id="image-preview">
-        <img id="image-thumb" alt="" />
-        <span class="empty-text">No image attached</span>
+    </section>
+
+    <!-- PRIMARY: play + reset -->
+    <section class="primary">
+      <button class="play-disc paused" id="play" aria-label="Play / Pause">
+        <span class="play-icon" id="play-icon">▶</span>
+      </button>
+      <div class="quick-row">
+        <button class="quick-btn" id="reset">
+          <span class="quick-icon">↺</span>
+          <span class="quick-label">RESET</span>
+        </button>
+        <button class="quick-btn" id="stumble">
+          <span class="quick-icon">⚑</span>
+          <span class="quick-label">STUMBLE</span>
+        </button>
       </div>
+    </section>
+
+    <!-- CUES (no reactions) -->
+    <section>
+      <div class="dpad-label">
+        <span>CUES</span>
+        <span class="readout" id="cue-count-readout">0</span>
+      </div>
+      <div class="cue-grid cue-grid-3">
+        <button class="cue-btn" id="jump-prev">
+          <span class="ic">◀</span>
+          <span>PREV</span>
+        </button>
+        <button class="cue-btn" id="jump-next">
+          <span class="ic">▶</span>
+          <span>NEXT</span>
+        </button>
+        <button class="cue-btn" id="countdown">
+          <span class="ic">⏱</span>
+          <span>COUNT</span>
+        </button>
+      </div>
+      <select id="chapter-select" class="chapter-select">
+        <option value="">— jump to chapter —</option>
+      </select>
+    </section>
+
+    <!-- SPEED + FONT — compact -->
+    <section class="dpad dpad-compact">
+      <div class="dpad-label">
+        <span>SPEED</span>
+        <span class="readout" id="speed-readout">3</span>
+      </div>
+      <div class="dpad-row">
+        <button class="dpad-btn" id="speed-down" aria-label="Slower">−</button>
+        <div class="dpad-bar"><div class="dpad-fill" id="speed-fill"></div></div>
+        <button class="dpad-btn" id="speed-up" aria-label="Faster">+</button>
+      </div>
+    </section>
+
+    <section class="dpad dpad-compact">
+      <div class="dpad-label">
+        <span>FONT</span>
+        <span class="readout" id="font-readout">32 px</span>
+      </div>
+      <div class="dpad-row">
+        <button class="dpad-btn" id="font-down" aria-label="Smaller">−</button>
+        <div class="dpad-bar"><div class="dpad-fill" id="font-fill"></div></div>
+        <button class="dpad-btn" id="font-up" aria-label="Larger">+</button>
+      </div>
+    </section>
+
+    <section class="slider-section slider-compact">
+      <div class="dpad-label">
+        <span>OPACITY</span>
+        <span class="readout" id="opacity-readout">80%</span>
+      </div>
+      <input type="range" id="opacity" min="10" max="100" value="80" />
     </section>
 
     <footer>

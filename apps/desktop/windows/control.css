@@ -580,11 +580,33 @@ button.full { flex: 1; width: 100%; }
 }
 
 /* ============================================================
-   CONSOLE
+   CONSOLE — compact, sits below the script
    ============================================================ */
 
-.console { padding: 16px; }
-.console .section-head { margin-bottom: 12px; }
+.console { padding: 12px 14px; }
+.console .section-head { margin-bottom: 10px; }
+
+.console-layout {
+  display: grid;
+  grid-template-columns: minmax(180px, 0.7fr) minmax(0, 1.3fr);
+  gap: 16px;
+  align-items: start;
+}
+.console-left {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+.console-right {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  min-width: 0;
+}
+@media (max-width: 720px) {
+  .console-layout { grid-template-columns: 1fr; }
+}
 
 .lcd {
   background: linear-gradient(180deg, var(--lcd-bg-top), var(--lcd-bg-bottom));
@@ -595,7 +617,13 @@ button.full { flex: 1; width: 100%; }
   box-shadow:
     inset 0 1px 2px rgba(0, 0, 0, 0.6),
     inset 0 0 30px rgba(0, 60, 0, 0.18);
+  width: 100%;
 }
+.lcd-compact { padding: 8px 10px; margin-bottom: 0; }
+.lcd-compact .lcd-value { font-size: 14px; }
+.lcd-compact .lcd-label { font-size: 8px; }
+.lcd-compact .lcd-foot { font-size: 8.5px; margin-top: 7px; padding-top: 6px; }
+.lcd-compact .lcd-divider { height: 18px; }
 .lcd-row {
   display: grid;
   grid-template-columns: 1fr 1px 1fr 1px 1fr;
@@ -669,15 +697,15 @@ button.full { flex: 1; width: 100%; }
   margin-bottom: 14px;
 }
 .play-disc {
-  width: 96px;
-  height: 96px;
+  width: 68px;
+  height: 68px;
   border-radius: 50%;
   background:
     radial-gradient(circle at 30% 25%, rgba(255, 255, 255, 0.12), transparent 60%),
     linear-gradient(180deg, var(--btn-top), var(--btn-bottom));
   border: 1px solid var(--btn-border);
   color: var(--accent);
-  font-size: 34px;
+  font-size: 26px;
   cursor: pointer;
   position: relative;
   display: flex;
@@ -686,11 +714,12 @@ button.full { flex: 1; width: 100%; }
   box-shadow:
     inset 0 1px 0 rgba(255, 255, 255, 0.08),
     0 1px 0 rgba(0, 0, 0, 0.6),
-    0 8px 20px rgba(0, 0, 0, 0.45),
-    0 0 0 4px rgba(232, 255, 71, 0.05);
+    0 6px 14px rgba(0, 0, 0, 0.4),
+    0 0 0 3px rgba(232, 255, 71, 0.05);
   transition: all 160ms ease;
   padding: 0;
 }
+.play-disc-sm { width: 64px; height: 64px; font-size: 24px; }
 .play-disc:hover {
   color: var(--bg);
   background:
@@ -728,31 +757,33 @@ button.full { flex: 1; width: 100%; }
 /* Cue pad */
 .cue-pad {
   display: grid;
-  gap: 8px;
+  gap: 6px;
 }
-.cue-pad-3 { grid-template-columns: 1fr 1fr 1fr; }
-.cue-pad-2 { grid-template-columns: 1fr 1fr; margin-top: 8px; }
+.cue-pad-3 { grid-template-columns: repeat(5, 1fr); }
+.cue-pad-2 { grid-template-columns: 1fr 1fr; margin-top: 6px; }
 .cue-pad .pad-btn {
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 4px;
-  padding: 14px 6px 12px;
+  gap: 3px;
+  padding: 8px 4px 7px;
   background: linear-gradient(180deg, var(--btn-top), var(--btn-bottom));
   border: 1px solid var(--btn-border);
   border-radius: var(--r-sm);
   color: var(--text);
-  font-size: 10.5px;
-  letter-spacing: 0.06em;
+  font-size: 10px;
+  letter-spacing: 0.04em;
   text-transform: uppercase;
   font-weight: 600;
   cursor: pointer;
   box-shadow: var(--section-shadow);
   transition: all var(--t-fast) ease;
 }
+.pad-sm .pad-btn { padding: 7px 4px; font-size: 9.5px; gap: 2px; }
+.pad-sm .pad-btn .pad-ic { font-size: 14px; }
 .pad-btn .pad-ic {
-  font-size: 18px;
+  font-size: 16px;
   line-height: 1;
   color: var(--accent);
   text-shadow: 0 0 8px var(--accent-glow);
@@ -767,10 +798,10 @@ button.full { flex: 1; width: 100%; }
 
 /* Console aux (chapter select) */
 .console-aux {
-  margin-top: 12px;
+  margin-top: 4px;
 }
 .console-aux select {
-  padding: 9px 12px;
+  padding: 8px 10px;
 }
 
 /* Countdown row */
@@ -784,9 +815,10 @@ button.full { flex: 1; width: 100%; }
 .slider-row + .slider-row { border-top: 1px solid var(--border); }
 .countdown-row {
   border-top: 1px solid var(--border);
-  margin-top: 10px;
-  padding-top: 12px;
+  margin-top: 6px;
+  padding-top: 10px;
 }
+.countdown-row-sm { grid-template-columns: 84px 1fr 48px; padding: 6px 0 0; gap: 10px; }
 .countdown-row label, .slider-row label {
   font-size: 11px;
   letter-spacing: 0.06em;

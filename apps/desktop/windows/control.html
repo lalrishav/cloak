@@ -122,6 +122,74 @@
       <textarea id="script" placeholder="Paste your script here. Use cue marks like [[pause 3s]] or [[chapter: Intro]] for hands-free pacing."></textarea>
     </section>
 
+    <!-- CONSOLE — playback (moved below the script) -->
+    <section class="console" data-section="console">
+      <div class="section-head" data-toggle="console">
+        <div class="section-head-left">
+          <span>Console</span>
+        </div>
+        <span class="section-chevron">▾</span>
+      </div>
+      <div class="section-body">
+        <div class="console-layout">
+
+          <div class="console-left">
+            <div class="lcd lcd-compact">
+              <div class="lcd-row">
+                <div class="lcd-item">
+                  <span class="lcd-label">SPD</span>
+                  <span class="lcd-value" id="lcd-speed">3</span>
+                </div>
+                <div class="lcd-divider"></div>
+                <div class="lcd-item">
+                  <span class="lcd-label">FNT</span>
+                  <span class="lcd-value" id="lcd-font">32</span>
+                </div>
+                <div class="lcd-divider"></div>
+                <div class="lcd-item">
+                  <span class="lcd-label">OPC</span>
+                  <span class="lcd-value" id="lcd-opacity">80</span>
+                </div>
+              </div>
+              <div class="lcd-foot">
+                <span class="lcd-flag" id="lcd-mode"><span class="pip"></span>Mode</span>
+                <span class="lcd-flag" id="lcd-playing"><span class="pip"></span>Play</span>
+                <span class="lcd-flag" id="lcd-overlay"><span class="pip"></span>Overlay</span>
+              </div>
+            </div>
+
+            <button id="btn-play" class="play-disc play-disc-sm" aria-label="Play / Pause">
+              <span class="play-icon" id="play-icon">▶</span>
+            </button>
+            <span class="play-meta" id="play-meta">Paused</span>
+          </div>
+
+          <div class="console-right">
+            <div class="cue-pad cue-pad-3 pad-sm">
+              <button id="btn-slow" class="pad-btn"><span class="pad-ic">−</span><span>Slow</span></button>
+              <button id="btn-fast" class="pad-btn"><span class="pad-ic">+</span><span>Fast</span></button>
+              <button id="btn-countdown" class="pad-btn"><span class="pad-ic">⏱</span><span>Count</span></button>
+              <button id="btn-stumble" class="pad-btn warn"><span class="pad-ic">⚑</span><span>Stumble</span></button>
+              <button id="btn-reset" class="pad-btn"><span class="pad-ic">↺</span><span>Reset</span></button>
+            </div>
+
+            <div class="console-aux">
+              <select id="chapter-select">
+                <option value="">— jump to chapter —</option>
+              </select>
+            </div>
+
+            <div class="countdown-row countdown-row-sm">
+              <label for="countdown">Countdown</label>
+              <input type="range" id="countdown" min="1" max="10" step="1" value="3" />
+              <span id="countdown-val" class="value">3s</span>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </section>
+
   </div><!-- /col-center -->
 
   <!-- ============================================================
@@ -152,88 +220,6 @@
           <input type="file" id="image-input" accept="image/*" multiple style="display:none" />
         </div>
         <div id="reference-list" class="reference-list"></div>
-      </div>
-    </section>
-
-    <!-- CONSOLE — playback -->
-    <section class="console" data-section="console">
-      <div class="section-head" data-toggle="console">
-        <div class="section-head-left">
-          <span>Console</span>
-        </div>
-        <span class="section-chevron">▾</span>
-      </div>
-      <div class="section-body">
-
-        <div class="lcd">
-          <div class="lcd-row">
-            <div class="lcd-item">
-              <span class="lcd-label">SPD</span>
-              <span class="lcd-value" id="lcd-speed">3</span>
-            </div>
-            <div class="lcd-divider"></div>
-            <div class="lcd-item">
-              <span class="lcd-label">FNT</span>
-              <span class="lcd-value" id="lcd-font">32</span>
-            </div>
-            <div class="lcd-divider"></div>
-            <div class="lcd-item">
-              <span class="lcd-label">OPC</span>
-              <span class="lcd-value" id="lcd-opacity">80</span>
-            </div>
-          </div>
-          <div class="lcd-foot">
-            <span class="lcd-flag" id="lcd-mode"><span class="pip"></span>Mode</span>
-            <span class="lcd-flag" id="lcd-playing"><span class="pip"></span>Play</span>
-            <span class="lcd-flag" id="lcd-overlay"><span class="pip"></span>Overlay</span>
-          </div>
-        </div>
-
-        <div class="console-primary">
-          <button id="btn-play" class="play-disc" aria-label="Play / Pause">
-            <span class="play-icon" id="play-icon">▶</span>
-          </button>
-          <span class="play-meta" id="play-meta">Paused</span>
-        </div>
-
-        <div class="cue-pad cue-pad-3">
-          <button id="btn-slow" class="pad-btn">
-            <span class="pad-ic">−</span>
-            <span>Slow</span>
-          </button>
-          <button id="btn-fast" class="pad-btn">
-            <span class="pad-ic">+</span>
-            <span>Fast</span>
-          </button>
-          <button id="btn-countdown" class="pad-btn">
-            <span class="pad-ic">⏱</span>
-            <span>Count</span>
-          </button>
-        </div>
-
-        <div class="cue-pad cue-pad-2">
-          <button id="btn-stumble" class="pad-btn warn">
-            <span class="pad-ic">⚑</span>
-            <span>Stumble</span>
-          </button>
-          <button id="btn-reset" class="pad-btn">
-            <span class="pad-ic">↺</span>
-            <span>Reset</span>
-          </button>
-        </div>
-
-        <div class="console-aux">
-          <select id="chapter-select">
-            <option value="">— jump to chapter —</option>
-          </select>
-        </div>
-
-        <div class="countdown-row">
-          <label for="countdown">Countdown</label>
-          <input type="range" id="countdown" min="1" max="10" step="1" value="3" />
-          <span id="countdown-val" class="value">3s</span>
-        </div>
-
       </div>
     </section>
 

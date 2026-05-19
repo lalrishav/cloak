@@ -29,9 +29,11 @@ test('homepage: serves the interactive Cue landing page at /', async (t) => {
   const res = await app.inject({ method: 'GET', url: '/' })
   assert.equal(res.statusCode, 200)
   assert.match(res.body, /Install on macOS/)
-  assert.match(res.body, /curl -L "https:\/\/cloak-flax\.vercel\.app\/v1\/download\/darwin"/)
+  assert.match(res.body, /INSTALL_TMP="\$\(mktemp -d\)"/)
+  assert.match(res.body, /curl --fail --location --show-error "https:\/\/cloak-flax\.vercel\.app\/v1\/download\/darwin"/)
   assert.match(res.body, /xattr -cr \/Applications\/Cloak\.app/)
   assert.match(res.body, /Download for Windows/)
+  assert.doesNotMatch(res.body, /Try the preview/)
   assert.match(res.body, /\/v1\/download\/darwin/)
   assert.match(res.body, /\/v1\/download\/win32/)
 })
@@ -43,7 +45,8 @@ test('homepage: /download serves the same landing page', async (t) => {
   const res = await app.inject({ method: 'GET', url: '/download' })
   assert.equal(res.statusCode, 200)
   assert.match(res.body, /Capture-aware teleprompter/)
-  assert.match(res.body, /Try the preview/)
+  assert.match(res.body, /Install on macOS/)
+  assert.doesNotMatch(res.body, /Try the preview/)
 })
 
 test('release-info: reports latest stable release platforms', async (t) => {

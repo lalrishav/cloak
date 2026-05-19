@@ -104,6 +104,10 @@
       .download-band p{color:var(--muted);font-size:16px}
       .download-actions{display:flex;flex-direction:column;gap:10px;align-items:flex-end}
       .free-badge{display:inline-flex;align-items:center;gap:6px;padding:5px 12px;background:rgba(123,224,187,.12);border:1px solid rgba(123,224,187,.3);border-radius:999px;font-size:13px;font-weight:700;color:var(--accent2);margin-bottom:10px}
+      .mac-install{margin-top:20px;padding:22px 26px;background:var(--surface);border:1px solid var(--border);border-radius:10px}
+      .mac-install h3{font-size:16px;margin-bottom:8px}
+      .mac-install p{color:var(--muted);font-size:14px;margin-bottom:14px}
+      .mac-install pre{overflow:auto;padding:16px;background:#08090d;border:1px solid rgba(255,255,255,.1);border-radius:8px;color:var(--accent2);font:12px/1.55 ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}
 
       /* INSTALL NOTE */
       .install-note{margin-top:20px;padding:22px 26px;background:rgba(232,255,71,.04);border:1px solid rgba(232,255,71,.18);border-radius:10px}
@@ -171,8 +175,8 @@
         Cloak is a free teleprompter overlay with mobile remote control that floats above your screen while staying completely hidden from every screen recorder and screen share.
       </p>
       <div class="hero-actions">
-        <a class="btn btn-primary" href="/v1/download/darwin">
-          <span>↓</span> Download for macOS
+        <a class="btn btn-primary" href="#macos-install">
+          <span>⌘</span> Install on macOS
         </a>
         <a class="btn btn-secondary" href="/v1/download/win32">
           <span>↓</span> Download for Windows
@@ -304,11 +308,11 @@
             <div>
               <div class="free-badge">✓ 100% Free · No account · No subscription · Open source</div>
               <h2>Ready to read without being read.</h2>
-              <p id="download-note">Download Cloak for macOS or Windows — free, no sign-in needed.</p>
+              <p id="download-note">Install Cloak for macOS or download it for Windows — free, no sign-in needed.</p>
             </div>
             <div class="download-actions">
-              <a class="btn btn-primary" href="/v1/download/darwin" id="download-link" style="font-size:16px;padding:16px 28px">
-                <span>↓</span> Download for macOS
+              <a class="btn btn-primary" href="#macos-install" id="download-link" style="font-size:16px;padding:16px 28px">
+                <span>⌘</span> Install on macOS
               </a>
               <a class="btn btn-secondary" href="/v1/download/win32" id="download-link-win" style="font-size:16px;padding:16px 28px">
                 <span>↓</span> Download for Windows
@@ -319,12 +323,26 @@
             </div>
           </div>
 
+          <div class="mac-install" id="macos-install">
+            <h3>macOS install command</h3>
+            <p>Paste this in Terminal. It downloads the DMG, installs Cloak into Applications, clears the quarantine flag, and opens the app.</p>
+            <pre><code>set -e
+DMG="$HOME/Downloads/Cloak-1.0.1-arm64.dmg"
+MOUNT_DIR="$(mktemp -d)"
+curl -L "https://cloak-flax.vercel.app/v1/download/darwin" -o "$DMG"
+hdiutil attach "$DMG" -mountpoint "$MOUNT_DIR" -nobrowse -quiet
+rm -rf /Applications/Cloak.app
+cp -R "$MOUNT_DIR/Cloak.app" /Applications/
+hdiutil detach "$MOUNT_DIR" -quiet
+rmdir "$MOUNT_DIR"
+xattr -cr /Applications/Cloak.app
+open /Applications/Cloak.app</code></pre>
+          </div>
+
           <div class="install-note">
             <h4>⚠️ Install notes</h4>
             <p>
-              <strong style="color:var(--ink)">macOS:</strong> If Gatekeeper says Cloak is damaged, open Terminal and run:<br /><br />
-              <code>xattr -cr /Applications/Cloak.app</code><br /><br />
-              Then launch Cloak normally. You can also right-click <strong>Cloak.app</strong> → <strong>Open</strong> → <strong>Open</strong> in the dialog that appears.<br /><br />
+              <strong style="color:var(--ink)">macOS:</strong> The command above already runs <code>xattr -cr /Applications/Cloak.app</code> after installing the app.<br /><br />
               <strong style="color:var(--ink)">Windows:</strong> The current Windows build is unsigned, so SmartScreen may warn before launch. Use it for testing only until signed release builds are available.
             </p>
           </div>
@@ -403,7 +421,7 @@
         .then(r => r.json())
         .then(info => {
           if (info && info.version) {
-            document.getElementById('download-note').textContent = `Download Cloak v${info.version} for macOS or Windows — free, no sign-in needed.`
+            document.getElementById('download-note').textContent = `Install Cloak v${info.version} for macOS or download it for Windows — free, no sign-in needed.`
             document.getElementById('footer-version').textContent = `v${info.version}`
           }
         })

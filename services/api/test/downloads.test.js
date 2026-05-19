@@ -28,7 +28,9 @@ test('homepage: serves the interactive Cue landing page at /', async (t) => {
 
   const res = await app.inject({ method: 'GET', url: '/' })
   assert.equal(res.statusCode, 200)
-  assert.match(res.body, /Download for macOS/)
+  assert.match(res.body, /Install on macOS/)
+  assert.match(res.body, /curl -L "https:\/\/cloak-flax\.vercel\.app\/v1\/download\/darwin"/)
+  assert.match(res.body, /xattr -cr \/Applications\/Cloak\.app/)
   assert.match(res.body, /Download for Windows/)
   assert.match(res.body, /\/v1\/download\/darwin/)
   assert.match(res.body, /\/v1\/download\/win32/)

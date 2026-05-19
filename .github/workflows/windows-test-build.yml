@@ -1,0 +1,43 @@
+name: Windows Test Build
+
+on:
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - 'apps/desktop/**'
+      - 'packages/shared/**'
+      - 'package.json'
+      - 'package-lock.json'
+      - '.github/workflows/windows-test-build.yml'
+
+jobs:
+  package:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - run: npm ci
+
+      - name: Run desktop unit tests
+        run: npm run test -w @cloak/desktop
+
+      - name: Build unsigned Windows installer and portable app
+        run: npm run dist:win -w @cloak/desktop
+        env:
+          # Keep test artifacts unsigned unless signing secrets are deliberately
+          # added later. Unsigned builds are expected to show SmartScreen prompts.
+          CSC_IDENTITY_AUTO_DISCOVERY: false
+
+      - name: Upload Windows test artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: cloak-windows-test-${{ github.sha }}
+          path: |
+            apps/desktop/dist/*win*.exe
+            apps/desktop/dist/latest*.yml
+          if-no-files-found: error

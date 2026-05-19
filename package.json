@@ -13,6 +13,8 @@
     "dev:api": "npm run dev -w @cloak/api",
     "dev:admin": "npm run dev -w @cloak/admin-web",
     "dev": "concurrently -n api,admin -c blue,magenta \"npm:dev:api\" \"npm:dev:admin\"",
+    "dist:win": "npm run dist:win -w @cloak/desktop",
+    "dist:mac": "npm run dist:mac -w @cloak/desktop",
     "build:dmg": "bash scripts/build-mac-dmg.sh",
     "install:local": "bash scripts/install-local-mac-app.sh",
     "test": "npm run test --workspaces --if-present",

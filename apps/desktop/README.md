@@ -84,6 +84,21 @@ By default this removes old `Cloak.app` copies from `~/Applications` and `/Appli
 
 After that, launch **Cloak** from Launchpad, Spotlight, or Finder like any other app. If macOS blocks the locally built app, right-click **Cloak.app**, choose **Open**, then confirm.
 
+## Build a Windows test app
+
+The fastest Windows test path is the GitHub Actions workflow in `.github/workflows/windows-test-build.yml`. Run **Windows Test Build** manually, download the artifact, and test the unsigned installer plus portable `.exe` on a real Windows machine.
+
+From a Windows development machine:
+
+```powershell
+cd cue
+npm ci
+npm run test -w @cloak/desktop
+npm run dist:win -w @cloak/desktop
+```
+
+Artifacts are written to `apps/desktop/dist/`. See `docs/windows-testing.md` for the full QA matrix.
+
 Two windows open:
 
 - **Control panel** — paste your script, adjust speed/font/opacity, reposition the overlay.

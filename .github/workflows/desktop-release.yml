@@ -19,7 +19,7 @@ jobs:
           cache: npm
       - run: npm ci
       - name: Build & package the desktop app
-        run: npm run dist -w @cue/desktop
+        run: npm run dist -w @cloak/desktop
         env:
           # Code-signing secrets. If unset, electron-builder still produces
           # UNSIGNED artifacts that run with a Gatekeeper / SmartScreen prompt —

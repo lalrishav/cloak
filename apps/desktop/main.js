@@ -1333,6 +1333,13 @@ function registerIpc() {
 
   ipcMain.on('capture:test', () => {
     if (!controlWin || controlWin.isDestroyed()) return
+    const platformNote = process.platform === 'win32'
+      ? 'Windows test targets:\n' +
+        '- Use Windows 10 version 2004 or newer, or Windows 11.\n' +
+        '- Test OBS Display Capture, Zoom/Teams/Meet share, Snipping Tool, and Print Screen.\n' +
+        '- On supported Windows versions, the overlay should be missing from capture. Older Windows builds may show a black window instead.\n' +
+        '- Hardware capture cards and external cameras will still see the overlay.'
+      : 'Note: macOS Cmd+Shift+5 / Screenshot.app and QuickTime on macOS 14+ use private capture paths that bypass NSWindowSharingNone — they will record the overlay. OBS Display Capture and Zoom screen share generally honor the flag.'
     dialog.showMessageBox(controlWin, {
       type: 'info',
       title: 'Recorder Preview Mode',
@@ -1342,7 +1349,7 @@ function registerIpc() {
         '1) Start a screen recording (QuickTime, OBS, or Zoom share screen).\n' +
         '2) Look at the recording preview — the Cloak overlay should be missing on supported setups.\n' +
         '3) You should still see the overlay on your physical display.\n\n' +
-        'Note: macOS Cmd+Shift+5 / Screenshot.app and QuickTime on macOS 14+ use private capture paths that bypass NSWindowSharingNone — they will record the overlay. OBS Display Capture and Zoom screen share generally honor the flag.',
+        platformNote,
       buttons: ['OK']
     })
   })

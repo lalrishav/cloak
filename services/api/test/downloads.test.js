@@ -29,7 +29,9 @@ test('homepage: serves the interactive Cue landing page at /', async (t) => {
   const res = await app.inject({ method: 'GET', url: '/' })
   assert.equal(res.statusCode, 200)
   assert.match(res.body, /Download for macOS/)
+  assert.match(res.body, /Download for Windows/)
   assert.match(res.body, /\/v1\/download\/darwin/)
+  assert.match(res.body, /\/v1\/download\/win32/)
 })
 
 test('homepage: /download serves the same landing page', async (t) => {
@@ -50,7 +52,10 @@ test('release-info: reports latest stable release platforms', async (t) => {
     {
       version: '1.0.0',
       channel: 'stable',
-      assets: { darwin: { url: 'https://downloads.example.com/Cue.dmg' } }
+      assets: {
+        darwin: { url: 'https://downloads.example.com/Cue.dmg' },
+        win32: { url: 'https://downloads.example.com/Cue.exe' }
+      }
     },
     'test'
   )
@@ -58,7 +63,7 @@ test('release-info: reports latest stable release platforms', async (t) => {
   const res = await app.inject({ method: 'GET', url: '/v1/release-info' })
   assert.equal(res.statusCode, 200)
   assert.equal(res.json().version, '1.0.0')
-  assert.deepEqual(res.json().platforms, ['darwin'])
+  assert.deepEqual(res.json().platforms, ['darwin', 'win32'])
 })
 
 test('download: darwin route records and redirects to hosted dmg', async (t) => {
@@ -81,4 +86,26 @@ test('download: darwin route records and redirects to hosted dmg', async (t) => 
   const downloads = await db.listDownloads({})
   assert.equal(downloads.length, 1)
   assert.equal(downloads[0].os, 'darwin')
+})
+
+test('download: win32 route records and redirects to hosted exe', async (t) => {
+  const app = await freshApp()
+  t.after(() => app.close())
+
+  await db.createRelease(
+    {
+      version: '1.0.1',
+      channel: 'stable',
+      assets: { win32: { url: 'https://downloads.example.com/Cloak-1.0.1-win-x64-setup.exe' } }
+    },
+    'test'
+  )
+
+  const res = await app.inject({ method: 'GET', url: '/v1/download/win32' })
+  assert.equal(res.statusCode, 302)
+  assert.equal(res.headers.location, 'https://downloads.example.com/Cloak-1.0.1-win-x64-setup.exe')
+
+  const downloads = await db.listDownloads({})
+  assert.equal(downloads.length, 1)
+  assert.equal(downloads[0].os, 'win32')
 })

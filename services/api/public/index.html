@@ -4,7 +4,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Cloak — Teleprompter invisible to screen recorders</title>
-    <meta name="description" content="Cloak is a free teleprompter overlay for macOS that stays completely hidden from Zoom, OBS, Teams, Meet, and Loom recordings. Your script, invisible to cameras." />
+    <meta name="description" content="Cloak is a free teleprompter overlay for macOS and Windows that stays hidden from Zoom, OBS, Teams, Meet, and Loom recordings. Your script, invisible to cameras." />
     <style>
       :root {
         --bg:      #0a0b10;
@@ -157,7 +157,7 @@
         <a href="#how">How it works</a>
         <a href="#features">Features</a>
         <a href="#faq">FAQ</a>
-        <a class="nav-cta btn" href="/v1/download/darwin">↓ Download</a>
+        <a class="nav-cta btn" href="#download">↓ Download</a>
       </div>
     </nav>
 
@@ -174,9 +174,12 @@
         <a class="btn btn-primary" href="/v1/download/darwin">
           <span>↓</span> Download for macOS
         </a>
+        <a class="btn btn-secondary" href="/v1/download/win32">
+          <span>↓</span> Download for Windows
+        </a>
         <a class="btn btn-secondary" href="#how">Try the preview</a>
       </div>
-      <p class="hero-meta">macOS 12+ · Apple Silicon · phone remote over same Wi-Fi · <strong>100% Free, always</strong></p>
+      <p class="hero-meta">macOS 12+ · Windows 10 2004+ / 11 · phone remote over same Wi-Fi · <strong>100% Free, always</strong></p>
       <div class="hero-shot">
         <img src="/assets/cloak-hero.png" alt="Cloak teleprompter control panel with mobile remote" />
       </div>
@@ -201,7 +204,7 @@
             <div class="how-card">
               <div class="how-num">01</div>
               <h3>OS-level protection</h3>
-              <p>Cloak uses <code>setContentProtection</code> — a documented macOS API that tells the window server to exclude this window from any capture feed. Not a filter. Not a trick.</p>
+              <p>Cloak uses <code>setContentProtection</code> — documented OS-level capture protection on macOS and Windows. Not a filter. Not a trick.</p>
             </div>
             <div class="how-card">
               <div class="how-num">02</div>
@@ -251,7 +254,7 @@
             <div class="feat feat-highlight">
               <div class="feat-icon" style="background:rgba(232,255,71,.12)">🫥</div>
               <h3>Invisible to recorders</h3>
-              <p>Hidden from OBS, Zoom, Teams, Google Meet, Loom, and any app using the macOS screen capture API. Works on macOS 12+.</p>
+              <p>Hidden from OBS, Zoom, Teams, Google Meet, Loom, and supported system capture APIs. Works on macOS 12+ and Windows 10 2004+.</p>
             </div>
             <div class="feat">
               <div class="feat-icon" style="background:rgba(123,224,187,.1)">🎙</div>
@@ -301,11 +304,14 @@
             <div>
               <div class="free-badge">✓ 100% Free · No account · No subscription · Open source</div>
               <h2>Ready to read without being read.</h2>
-              <p id="download-note">Download Cloak for macOS — free, no sign-in needed.</p>
+              <p id="download-note">Download Cloak for macOS or Windows — free, no sign-in needed.</p>
             </div>
             <div class="download-actions">
               <a class="btn btn-primary" href="/v1/download/darwin" id="download-link" style="font-size:16px;padding:16px 28px">
                 <span>↓</span> Download for macOS
+              </a>
+              <a class="btn btn-secondary" href="/v1/download/win32" id="download-link-win" style="font-size:16px;padding:16px 28px">
+                <span>↓</span> Download for Windows
               </a>
               <a class="btn btn-secondary" href="https://github.com/lalrishav/cloak/releases" target="_blank" rel="noopener" style="font-size:13px;padding:10px 18px">
                 All releases on GitHub →
@@ -314,12 +320,12 @@
           </div>
 
           <div class="install-note">
-            <h4>⚠️ macOS says "Cloak is damaged"?</h4>
+            <h4>⚠️ Install notes</h4>
             <p>
-              This is a macOS Gatekeeper warning — not an actual problem. Cloak isn't yet signed with an Apple Developer certificate.<br /><br />
-              <strong style="color:var(--ink)">Fix in one step:</strong> Open Terminal and run:<br /><br />
+              <strong style="color:var(--ink)">macOS:</strong> If Gatekeeper says Cloak is damaged, open Terminal and run:<br /><br />
               <code>xattr -cr /Applications/Cloak.app</code><br /><br />
-              Then launch Cloak normally. You can also right-click <strong>Cloak.app</strong> → <strong>Open</strong> → <strong>Open</strong> in the dialog that appears.
+              Then launch Cloak normally. You can also right-click <strong>Cloak.app</strong> → <strong>Open</strong> → <strong>Open</strong> in the dialog that appears.<br /><br />
+              <strong style="color:var(--ink)">Windows:</strong> The current Windows build is unsigned, so SmartScreen may warn before launch. Use it for testing only until signed release builds are available.
             </p>
           </div>
         </div>
@@ -341,7 +347,7 @@
             </div>
             <div class="faq-item">
               <button class="faq-btn" type="button"><strong>Will the overlay be hidden in every recording app?</strong><span class="faq-plus">+</span></button>
-              <p class="faq-answer">Cloak uses <code>setContentProtection</code>, a documented macOS API. It works with most recorders that use the system capture pipeline — OBS, Zoom, Teams, Meet, Loom, QuickTime. Apps using newer ScreenCaptureKit on macOS 14+ (Zoom v5.16+, OBS v30+) may be able to see it. Always test with your exact setup before relying on it for critical recordings.</p>
+              <p class="faq-answer">Cloak uses <code>setContentProtection</code>, a documented Electron API backed by macOS and Windows capture-protection APIs. It works with most recorders that use the system capture pipeline — OBS, Zoom, Teams, Meet, Loom, QuickTime. Apps using newer ScreenCaptureKit on macOS 14+ may be able to see it. Always test with your exact setup before relying on it for critical recordings.</p>
             </div>
             <div class="faq-item">
               <button class="faq-btn" type="button"><strong>Does Cloak work with Hindi or Hinglish?</strong><span class="faq-plus">+</span></button>
@@ -397,7 +403,7 @@
         .then(r => r.json())
         .then(info => {
           if (info && info.version) {
-            document.getElementById('download-note').textContent = `Download Cloak v${info.version} for macOS — free, no sign-in needed.`
+            document.getElementById('download-note').textContent = `Download Cloak v${info.version} for macOS or Windows — free, no sign-in needed.`
             document.getElementById('footer-version').textContent = `v${info.version}`
           }
         })

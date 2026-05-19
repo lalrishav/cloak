@@ -226,7 +226,7 @@ export default function Releases() {
             <textarea rows={2} value={release.notes} onChange={setR('notes')} />
           </div>
           <div className="field">
-            <label>{'Assets (JSON: { "darwin": { "url": "…" } })'}</label>
+            <label>{'Assets (JSON: { "darwin": { "url": "…" }, "win32": { "url": "…" } })'}</label>
             <textarea rows={3} value={release.assets} onChange={setR('assets')} />
           </div>
           <button className="primary" type="submit" disabled={createRelease.isPending}>

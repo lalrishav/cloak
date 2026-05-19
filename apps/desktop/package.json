@@ -1,6 +1,6 @@
 {
   "name": "@cloak/desktop",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Capture-aware teleprompter overlay",
   "main": "main.js",
   "scripts": {
